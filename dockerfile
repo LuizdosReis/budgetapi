@@ -18,7 +18,7 @@ RUN addgroup --system juser
 
 RUN adduser -S -s /bin/false -G juser juser
 
-RUN chown -R javauser:javauser /application
+RUN chown -R juser:juser /application
 
 USER juser
 
