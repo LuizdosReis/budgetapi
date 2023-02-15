@@ -1,14 +1,22 @@
 spring:
+  application:
+    name: budget
   datasource:
-    driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:budget
-    username: sa
-    password:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/budget
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
 
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    generate-ddl: true
     show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        current_session_context_class: thread
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
     hibernate:
       ddl-auto: validate
 
