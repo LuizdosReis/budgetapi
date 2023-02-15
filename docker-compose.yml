@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  db:
+    container_name: budget-db
+    image: postgres:15.1-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: budget
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data:/var/lib/postgresql/data
+  api:
+    container_name: budget-api
+    build: .
+    environment:
+      DB_HOST: budget-db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    ports:
+      - "8080:8080"
