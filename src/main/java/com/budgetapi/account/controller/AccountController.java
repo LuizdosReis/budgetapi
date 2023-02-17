@@ -4,7 +4,9 @@ import com.budgetapi.account.dto.AccountDTO;
 import com.budgetapi.account.mapper.AccountMapper;
 import com.budgetapi.account.repository.AccountRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,5 +29,12 @@ public class AccountController {
         return StreamSupport.stream(repository.findAll().spliterator(), false)
                 .map(mapper::accountToAccountDTO)
                 .collect(Collectors.toSet());
+    }
+
+    @GetMapping(path = "/{id}")
+    public AccountDTO getById(@PathVariable Long id) {
+        return repository.findById(id)
+                .map(mapper::accountToAccountDTO)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
     }
 }
