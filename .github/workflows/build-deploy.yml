@@ -74,7 +74,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    needs: [build_push_container_image]
+    needs: [build_and_push_container_image]
 
     steps:
     - uses: azure/webapps-deploy@v2
