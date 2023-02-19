@@ -3,6 +3,7 @@ package com.budgetapi.account.controller;
 import com.budgetapi.account.dto.AccountDTO;
 import com.budgetapi.account.mapper.AccountMapper;
 import com.budgetapi.account.repository.AccountRepository;
+import com.budgetapi.erro.NotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,6 +35,6 @@ public class AccountController {
     public AccountDTO getById(@PathVariable Long id) {
         return repository.findById(id)
                 .map(mapper::accountToAccountDTO)
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+                .orElseThrow(() -> new NotFoundException(String.format("Account with id %s not found", id)));
     }
 }

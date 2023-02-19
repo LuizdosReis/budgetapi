@@ -1,6 +1,7 @@
 package com.budgetapi.account.controller;
 
 import static com.budgetapi.account.controller.AccountController.BASE_URL;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -39,5 +40,14 @@ class AccountControllerTest {
         this.mockMvc.perform(get(BASE_URL + "/"+ 1))
                 .andDo(print())
                 .andExpect(status().isOk());
-    };
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenAccountWithIdNotExists() throws Exception {
+        when(repository.findById(anyLong())).thenReturn(Optional.empty());
+
+        this.mockMvc.perform(get(BASE_URL + "/"+ 1))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
 }
