@@ -27,14 +27,14 @@ public class AccountController {
     @GetMapping
     public Set<AccountDTO> getAll() {
         return StreamSupport.stream(repository.findAll().spliterator(), false)
-                .map(mapper::accountToAccountDTO)
+                .map(mapper::toDTO)
                 .collect(Collectors.toSet());
     }
 
     @GetMapping(path = "/{id}")
     public AccountDTO getById(@PathVariable Long id) {
         return repository.findById(id)
-                .map(mapper::accountToAccountDTO)
+                .map(mapper::toDTO)
                 .orElseThrow(() -> new NotFoundException(String.format("Account with id %s not found", id)));
     }
 }

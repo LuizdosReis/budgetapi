@@ -35,7 +35,7 @@ class AccountControllerTest {
         AccountDTO accountDTO = new AccountDTO(account.getId(), account.getName(), account.getCurrency());
 
         when(repository.findById(account.getId())).thenReturn(Optional.of(account));
-        when(mapper.accountToAccountDTO(account)).thenReturn(accountDTO);
+        when(mapper.toDTO(account)).thenReturn(accountDTO);
 
         this.mockMvc.perform(get(BASE_URL + "/"+ 1))
                 .andDo(print())

@@ -2,12 +2,13 @@ package com.budgetapi.account.mapper;
 
 import com.budgetapi.account.dto.AccountDTO;
 import com.budgetapi.account.model.Account;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.factory.Mappers;
 
-@Component
-public class AccountMapper {
+@Mapper(componentModel = "spring")
+public interface AccountMapper {
 
-    public AccountDTO accountToAccountDTO(Account account) {
-        return new AccountDTO(account.getId(), account.getName(), account.getCurrency());
-    }
+    AccountMapper MAPPER = Mappers.getMapper( AccountMapper.class );
+
+    AccountDTO toDTO(Account account);
 }
