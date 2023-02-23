@@ -1,4 +1,4 @@
-package com.budgetapi.account.controller.mapper;
+package com.budgetapi.account.mapper;
 
 import com.budgetapi.account.dto.AccountDTO;
 import com.budgetapi.account.mapper.AccountMapper;
