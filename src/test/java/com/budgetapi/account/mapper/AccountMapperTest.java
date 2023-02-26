@@ -6,6 +6,7 @@ import com.budgetapi.account.model.Account;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class AccountMapperTest {
 
@@ -18,5 +19,12 @@ class AccountMapperTest {
         assertEquals(account.getCurrency(), accountDTO.currency());
         assertEquals(account.getId(), accountDTO.id());
         assertEquals(account.getName(), accountDTO.name());
+    }
+
+    @Test
+    void giveNullWhenMapsThenReturnNull() {
+        AccountDTO accountDTO = AccountMapper.MAPPER.toDTO(null);
+
+        assertNull(accountDTO);
     }
 }
