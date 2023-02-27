@@ -4,6 +4,7 @@ import com.budgetapi.account.dto.AccountDTO;
 import com.budgetapi.account.dto.AccountRequestDTO;
 import com.budgetapi.account.model.Account;
 import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
@@ -13,4 +14,5 @@ public interface AccountMapper {
 
     AccountDTO toDTO(Account account);
     Account toModel(AccountRequestDTO dto);
+    void updateModel(AccountRequestDTO dto, @MappingTarget Account account);
 }

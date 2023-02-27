@@ -11,12 +11,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -51,5 +53,15 @@ public class AccountController {
         Account account = mapper.toModel(accountRequestDTO);
         repository.save(account);
         return mapper.toDTO(account);
+    }
+
+    @PutMapping ("/{id}")
+    public AccountDTO update(@PathVariable @NotNull Long id, @RequestBody @Valid AccountRequestDTO accountRequestDTO) {
+        return repository.findById(id)
+                .map(account -> {
+                    mapper.updateModel(accountRequestDTO, account);
+                    return mapper.toDTO(account);
+                })
+                .orElseThrow(() -> new NotFoundException(String.format("Account with id %s not found", id)));
     }
 }

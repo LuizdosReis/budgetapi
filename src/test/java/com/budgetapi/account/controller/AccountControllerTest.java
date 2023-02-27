@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -19,7 +20,6 @@ import com.budgetapi.account.repository.AccountRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -127,5 +127,49 @@ class AccountControllerTest {
                 new AccountRequestDTO("nubank", "a"),
                 new AccountRequestDTO("nubank", "a".repeat(4))
         );
+    }
+
+    @Test
+    void shouldUpdateAccountWhenCallCreate() throws Exception {
+        Long accountId = 1L;
+        AccountRequestDTO accountRequestDTO = new AccountRequestDTO("Santander", "EUR");
+        Account account = Account.builder().id(accountId).name("Nubank").currency("BRL").build();
+        AccountDTO accountDTO = new AccountDTO(account.getId(), accountRequestDTO.name(), accountRequestDTO.currency());
+
+        when(repository.findById(accountId)).thenReturn(Optional.of(account));
+        when(repository.save(account)).thenReturn(account);
+        when(mapper.toDTO(account)).thenReturn(accountDTO);
+
+        this.mockMvc.perform(put(BASE_URL + "/" + accountId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsBytes(accountRequestDTO)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name", is(accountRequestDTO.name())))
+                .andExpect(jsonPath("$.currency", is(accountRequestDTO.currency())))
+                .andExpect(jsonPath("$.id", is(accountId), Long.class));
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenUpdateAccountWithIdNotExists() throws Exception {
+        AccountRequestDTO accountRequestDTO = new AccountRequestDTO("Santander", "EUR");
+
+        when(repository.findById(anyLong())).thenReturn(Optional.empty());
+
+        this.mockMvc.perform(put(BASE_URL + "/"+ 1)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(new ObjectMapper().writeValueAsBytes(accountRequestDTO)))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidAccounts")
+    void shouldReturnBadRequestWhenCallUpdateWithInvalidAccount(AccountRequestDTO accountRequestDTO) throws Exception {
+        this.mockMvc.perform(put(BASE_URL + "/"+ 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsBytes(accountRequestDTO)))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
     }
 }

@@ -2,7 +2,6 @@ package com.budgetapi.account.mapper;
 
 import com.budgetapi.account.dto.AccountDTO;
 import com.budgetapi.account.dto.AccountRequestDTO;
-import com.budgetapi.account.mapper.AccountMapper;
 import com.budgetapi.account.model.Account;
 import org.junit.jupiter.api.Test;
 
@@ -44,5 +43,26 @@ class AccountMapperTest {
         Account account = AccountMapper.MAPPER.toModel(null);
 
         assertNull(account);
+    }
+
+    @Test
+    void giveAccountRequestDTOWhenUpdateThenCorrect() {
+        AccountRequestDTO accountRequestDTO = new AccountRequestDTO("Santander", "EUR");
+        Account account = Account.builder().id(1L).name("Nubank").currency("BRL").build();
+
+        AccountMapper.MAPPER.updateModel(accountRequestDTO, account);
+
+        assertEquals(accountRequestDTO.currency(), account.getCurrency());
+        assertEquals(accountRequestDTO.name(), account.getName());
+    }
+
+    @Test
+    void giveNullAccountRequestDTOWhenUpdateThenCorrect() {
+        Account account = Account.builder().id(1L).name("Nubank").currency("BRL").build();
+
+        AccountMapper.MAPPER.updateModel(null, account);
+
+        assertEquals(account.getCurrency(), account.getCurrency());
+        assertEquals(account.getName(), account.getName());
     }
 }
