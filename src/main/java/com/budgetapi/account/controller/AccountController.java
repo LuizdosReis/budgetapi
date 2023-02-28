@@ -29,6 +29,7 @@ import java.util.stream.StreamSupport;
 public class AccountController {
 
     public static final String BASE_URL = "/accounts";
+    private static final String ACCOUNT_NOT_FOUND = "Account with id %s not found";
 
     private AccountRepository repository;
     private AccountMapper mapper;
@@ -44,7 +45,7 @@ public class AccountController {
     public AccountDTO getById(@PathVariable Long id) {
         return repository.findById(id)
                 .map(mapper::toDTO)
-                .orElseThrow(() -> new NotFoundException(String.format("Account with id %s not found", id)));
+                .orElseThrow(() -> new NotFoundException(String.format(ACCOUNT_NOT_FOUND, id)));
     }
 
     @PostMapping()
@@ -62,6 +63,6 @@ public class AccountController {
                     mapper.updateModel(accountRequestDTO, account);
                     return mapper.toDTO(account);
                 })
-                .orElseThrow(() -> new NotFoundException(String.format("Account with id %s not found", id)));
+                .orElseThrow(() -> new NotFoundException(String.format(ACCOUNT_NOT_FOUND, id)));
     }
 }
