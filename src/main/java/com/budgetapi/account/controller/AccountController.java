@@ -8,6 +8,7 @@ import com.budgetapi.account.repository.AccountRepository;
 import com.budgetapi.erro.NotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,5 +65,13 @@ public class AccountController {
                     return mapper.toDTO(account);
                 })
                 .orElseThrow(() -> new NotFoundException(String.format(ACCOUNT_NOT_FOUND, id)));
+    }
+
+    @DeleteMapping(path = "/{id}")
+    @ResponseStatus(code = HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        Account account = repository.findById(id)
+                .orElseThrow(() -> new NotFoundException(String.format(ACCOUNT_NOT_FOUND, id)));
+        repository.delete(account);
     }
 }

@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -172,4 +173,29 @@ class AccountControllerTest {
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void shouldReturnNotContentWhenDeleteAccount() throws Exception {
+        Long accountId = 1L;
+        Account account = Account.builder().id(accountId).name("Nubank").currency("BRL").build();
+
+        when(repository.findById(accountId)).thenReturn(Optional.of(account));
+
+        this.mockMvc.perform(delete(BASE_URL + "/"+ 1))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenDeleteAccountWithNoExistId() throws Exception {
+        Long accountId = 1L;
+
+        when(repository.findById(accountId)).thenReturn(Optional.empty());
+
+        this.mockMvc.perform(delete(BASE_URL + "/" + accountId))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+
 }
