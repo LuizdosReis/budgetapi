@@ -18,6 +18,8 @@ import com.budgetapi.account.dto.AccountRequestDTO;
 import com.budgetapi.account.mapper.AccountMapper;
 import com.budgetapi.account.model.Account;
 import com.budgetapi.account.repository.AccountRepository;
+import com.budgetapi.auth.TokenService;
+import com.budgetapi.config.SecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -25,14 +27,18 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+@WithMockUser
 @WebMvcTest(AccountController.class)
+@Import({SecurityConfig.class})
 class AccountControllerTest {
 
     @Autowired
