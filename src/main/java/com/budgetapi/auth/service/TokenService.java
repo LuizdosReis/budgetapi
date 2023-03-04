@@ -1,4 +1,4 @@
-package com.budgetapi.auth;
+package com.budgetapi.auth.service;
 
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
