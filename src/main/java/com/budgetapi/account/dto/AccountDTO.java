@@ -1,7 +1,9 @@
 package com.budgetapi.account.dto;
 
+import java.util.UUID;
+
 public record AccountDTO(
-        Long id,
+        UUID id,
         String name,
         String currency
 ){}

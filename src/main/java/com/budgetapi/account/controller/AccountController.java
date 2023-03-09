@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -43,7 +44,7 @@ public class AccountController {
     }
 
     @GetMapping(path = "/{id}")
-    public AccountDTO getById(@PathVariable Long id) {
+    public AccountDTO getById(@PathVariable UUID id) {
         return repository.findById(id)
                 .map(mapper::toDTO)
                 .orElseThrow(() -> new NotFoundException(String.format(ACCOUNT_NOT_FOUND, id)));
@@ -58,7 +59,7 @@ public class AccountController {
     }
 
     @PutMapping ("/{id}")
-    public AccountDTO update(@PathVariable @NotNull Long id, @RequestBody @Valid AccountRequestDTO accountRequestDTO) {
+    public AccountDTO update(@PathVariable @NotNull UUID id, @RequestBody @Valid AccountRequestDTO accountRequestDTO) {
         return repository.findById(id)
                 .map(account -> {
                     mapper.updateModel(accountRequestDTO, account);
@@ -69,7 +70,7 @@ public class AccountController {
 
     @DeleteMapping(path = "/{id}")
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
+    public void delete(@PathVariable UUID id) {
         Account account = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException(String.format(ACCOUNT_NOT_FOUND, id)));
         repository.delete(account);

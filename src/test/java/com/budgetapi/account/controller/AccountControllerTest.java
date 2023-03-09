@@ -3,7 +3,6 @@ package com.budgetapi.account.controller;
 import static com.budgetapi.account.controller.AccountController.BASE_URL;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -32,6 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 @WithMockUser
@@ -48,29 +48,32 @@ class AccountControllerTest {
 
     @Test
     void shouldReturnStatusOkWhenCallGetById() throws Exception {
-        Account account = Account.builder().id(1L).name("Nubank").currency("BRL").build();
+        UUID uuid = UUID.randomUUID();
+        Account account = Account.builder().id(uuid).name("Nubank").currency("BRL").build();
         AccountDTO accountDTO = new AccountDTO(account.getId(), account.getName(), account.getCurrency());
 
         when(repository.findById(account.getId())).thenReturn(Optional.of(account));
         when(mapper.toDTO(account)).thenReturn(accountDTO);
 
-        this.mockMvc.perform(get(BASE_URL + "/"+ 1))
+        this.mockMvc.perform(get(BASE_URL + "/"+ uuid))
                 .andDo(print())
                 .andExpect(status().isOk());
     }
 
     @Test
     void shouldReturnNotFoundWhenAccountWithIdNotExists() throws Exception {
-        when(repository.findById(anyLong())).thenReturn(Optional.empty());
+        UUID uuid = UUID.randomUUID();
+        when(repository.findById(uuid)).thenReturn(Optional.empty());
 
-        this.mockMvc.perform(get(BASE_URL + "/"+ 1))
+        this.mockMvc.perform(get(BASE_URL + "/"+ uuid))
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void shouldReturnStatusOkWhenCallGetAll() throws Exception {
-        Account account = Account.builder().id(1L).name("Nubank").currency("BRL").build();
+        UUID uuid = UUID.randomUUID();
+        Account account = Account.builder().id(uuid).name("Nubank").currency("BRL").build();
         AccountDTO accountDTO = new AccountDTO(account.getId(), account.getName(), account.getCurrency());
 
         when(repository.findAll()).thenReturn(List.of(account));
@@ -94,7 +97,7 @@ class AccountControllerTest {
     @Test
     void shouldReturnStatusCreatedWhenCallCreate() throws Exception {
         AccountRequestDTO accountRequestDTO = new AccountRequestDTO("Nubank", "BRL");
-        Account account = Account.builder().id(1L).name(accountRequestDTO.name()).currency(accountRequestDTO.currency()).build();
+        Account account = Account.builder().id(UUID.randomUUID()).name(accountRequestDTO.name()).currency(accountRequestDTO.currency()).build();
         AccountDTO accountDTO = new AccountDTO(account.getId(), account.getName(), account.getCurrency());
 
         when(mapper.toModel(accountRequestDTO)).thenReturn(account);
@@ -108,7 +111,7 @@ class AccountControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name",  is(account.getName())))
                 .andExpect(jsonPath("$.currency",  is(account.getCurrency())))
-                .andExpect(jsonPath("$.id",  is(account.getId()),  Long.class));
+                .andExpect(jsonPath("$.id",  is(account.getId().toString())));
     }
 
     @ParameterizedTest
@@ -136,7 +139,7 @@ class AccountControllerTest {
 
     @Test
     void shouldUpdateAccountWhenCallCreate() throws Exception {
-        Long accountId = 1L;
+        UUID accountId = UUID.randomUUID();
         AccountRequestDTO accountRequestDTO = new AccountRequestDTO("Santander", "EUR");
         Account account = Account.builder().id(accountId).name("Nubank").currency("BRL").build();
         AccountDTO accountDTO = new AccountDTO(account.getId(), accountRequestDTO.name(), accountRequestDTO.currency());
@@ -152,16 +155,17 @@ class AccountControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is(accountRequestDTO.name())))
                 .andExpect(jsonPath("$.currency", is(accountRequestDTO.currency())))
-                .andExpect(jsonPath("$.id", is(accountId), Long.class));
+                .andExpect(jsonPath("$.id", is(accountId.toString())));
     }
 
     @Test
     void shouldReturnNotFoundWhenUpdateAccountWithIdNotExists() throws Exception {
         AccountRequestDTO accountRequestDTO = new AccountRequestDTO("Santander", "EUR");
 
-        when(repository.findById(anyLong())).thenReturn(Optional.empty());
+        UUID accountId = UUID.randomUUID();
+        when(repository.findById(accountId)).thenReturn(Optional.empty());
 
-        this.mockMvc.perform(put(BASE_URL + "/"+ 1)
+        this.mockMvc.perform(put(BASE_URL + "/"+ accountId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(new ObjectMapper().writeValueAsBytes(accountRequestDTO)))
                 .andDo(print())
@@ -171,7 +175,8 @@ class AccountControllerTest {
     @ParameterizedTest
     @MethodSource("invalidAccounts")
     void shouldReturnBadRequestWhenCallUpdateWithInvalidAccount(AccountRequestDTO accountRequestDTO) throws Exception {
-        this.mockMvc.perform(put(BASE_URL + "/"+ 1)
+
+        this.mockMvc.perform(put(BASE_URL + "/"+ UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsBytes(accountRequestDTO)))
                 .andDo(print())
@@ -180,19 +185,19 @@ class AccountControllerTest {
 
     @Test
     void shouldReturnNotContentWhenDeleteAccount() throws Exception {
-        Long accountId = 1L;
+        UUID accountId = UUID.randomUUID();
         Account account = Account.builder().id(accountId).name("Nubank").currency("BRL").build();
 
         when(repository.findById(accountId)).thenReturn(Optional.of(account));
 
-        this.mockMvc.perform(delete(BASE_URL + "/"+ 1))
+        this.mockMvc.perform(delete(BASE_URL + "/"+ accountId))
                 .andDo(print())
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void shouldReturnNotFoundWhenDeleteAccountWithNoExistId() throws Exception {
-        Long accountId = 1L;
+        UUID accountId = UUID.randomUUID();
 
         when(repository.findById(accountId)).thenReturn(Optional.empty());
 

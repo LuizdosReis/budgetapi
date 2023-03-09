@@ -5,6 +5,8 @@ import com.budgetapi.account.dto.AccountRequestDTO;
 import com.budgetapi.account.model.Account;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -12,7 +14,7 @@ class AccountMapperTest {
 
     @Test
     void giveAccountWhenMapsThenCorrect() {
-        Account account = Account.builder().id(1L).name("Nubank").currency("BRL").build();
+        Account account = Account.builder().id(UUID.randomUUID()).name("Nubank").currency("BRL").build();
 
         AccountDTO accountDTO = AccountMapper.MAPPER.toDTO(account);
 
@@ -48,7 +50,7 @@ class AccountMapperTest {
     @Test
     void giveAccountRequestDTOWhenUpdateThenCorrect() {
         AccountRequestDTO accountRequestDTO = new AccountRequestDTO("Santander", "EUR");
-        Account account = Account.builder().id(1L).name("Nubank").currency("BRL").build();
+        Account account = Account.builder().id(UUID.randomUUID()).name("Nubank").currency("BRL").build();
 
         AccountMapper.MAPPER.updateModel(accountRequestDTO, account);
 
@@ -58,7 +60,7 @@ class AccountMapperTest {
 
     @Test
     void giveNullAccountRequestDTOWhenUpdateThenCorrect() {
-        Account account = Account.builder().id(1L).name("Nubank").currency("BRL").build();
+        Account account = Account.builder().id(UUID.randomUUID()).name("Nubank").currency("BRL").build();
 
         AccountMapper.MAPPER.updateModel(null, account);
 
