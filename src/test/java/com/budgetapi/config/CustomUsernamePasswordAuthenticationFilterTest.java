@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class CustomUsernamePasswordAuthenticationFilterTest extends AbstractControllerTest {
+class CustomUsernamePasswordAuthenticationFilterTest extends AbstractControllerTest {
 
     private static final String URL = "/login";
     private static final String USERNAME = "username";

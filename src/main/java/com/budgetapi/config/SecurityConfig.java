@@ -42,7 +42,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 })
                 .oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
                 .addFilter(new CustomUsernamePasswordAuthenticationFilter(authenticationManager(), jwtEncoder()));
-        ;
     }
 
     @Bean

@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 @AutoConfigureMockMvc
 @WithMockUser
-public class AbstractControllerTest {
+public abstract class AbstractControllerTest {
 
     @MockBean
     private UserRepository userRepository;
