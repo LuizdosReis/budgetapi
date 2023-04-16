@@ -1,17 +1,6 @@
 package com.budgetapi.account.controller;
 
-import static com.budgetapi.account.controller.AccountController.BASE_URL;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import com.budgetapi.AbstractControllerTest;
 import com.budgetapi.account.dto.AccountDTO;
 import com.budgetapi.account.dto.AccountRequestDTO;
 import com.budgetapi.account.mapper.AccountMapper;
@@ -22,11 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -34,10 +20,19 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-@WithMockUser
-@SpringBootTest
-@AutoConfigureMockMvc
-class AccountControllerTest {
+import static com.budgetapi.account.controller.AccountController.BASE_URL;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+class AccountControllerTest extends AbstractControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -52,10 +47,10 @@ class AccountControllerTest {
         Account account = Account.builder().id(uuid).name("Nubank").currency("BRL").build();
         AccountDTO accountDTO = new AccountDTO(account.getId(), account.getName(), account.getCurrency());
 
-        when(repository.findById(account.getId())).thenReturn(Optional.of(account));
+        when(repository.findByIdAndUser(account.getId(), user)).thenReturn(Optional.of(account));
         when(mapper.toDTO(account)).thenReturn(accountDTO);
 
-        this.mockMvc.perform(get(BASE_URL + "/"+ uuid))
+        this.mockMvc.perform(get(BASE_URL + "/" + uuid))
                 .andDo(print())
                 .andExpect(status().isOk());
     }
@@ -65,7 +60,7 @@ class AccountControllerTest {
         UUID uuid = UUID.randomUUID();
         when(repository.findById(uuid)).thenReturn(Optional.empty());
 
-        this.mockMvc.perform(get(BASE_URL + "/"+ uuid))
+        this.mockMvc.perform(get(BASE_URL + "/" + uuid))
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
@@ -91,7 +86,7 @@ class AccountControllerTest {
         this.mockMvc.perform(get(BASE_URL))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$",  hasSize(0)));
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
@@ -109,9 +104,9 @@ class AccountControllerTest {
                         .content(new ObjectMapper().writeValueAsBytes(accountRequestDTO)))
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name",  is(account.getName())))
-                .andExpect(jsonPath("$.currency",  is(account.getCurrency())))
-                .andExpect(jsonPath("$.id",  is(account.getId().toString())));
+                .andExpect(jsonPath("$.name", is(account.getName())))
+                .andExpect(jsonPath("$.currency", is(account.getCurrency())))
+                .andExpect(jsonPath("$.id", is(account.getId().toString())));
     }
 
     @ParameterizedTest
@@ -141,10 +136,10 @@ class AccountControllerTest {
     void shouldUpdateAccountWhenCallCreate() throws Exception {
         UUID accountId = UUID.randomUUID();
         AccountRequestDTO accountRequestDTO = new AccountRequestDTO("Santander", "EUR");
-        Account account = Account.builder().id(accountId).name("Nubank").currency("BRL").build();
+        Account account = Account.builder().id(accountId).name("Nubank").user(user).currency("BRL").build();
         AccountDTO accountDTO = new AccountDTO(account.getId(), accountRequestDTO.name(), accountRequestDTO.currency());
 
-        when(repository.findById(accountId)).thenReturn(Optional.of(account));
+        when(repository.findByIdAndUser(accountId, user)).thenReturn(Optional.of(account));
         when(repository.save(account)).thenReturn(account);
         when(mapper.toDTO(account)).thenReturn(accountDTO);
 
@@ -165,9 +160,9 @@ class AccountControllerTest {
         UUID accountId = UUID.randomUUID();
         when(repository.findById(accountId)).thenReturn(Optional.empty());
 
-        this.mockMvc.perform(put(BASE_URL + "/"+ accountId)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(new ObjectMapper().writeValueAsBytes(accountRequestDTO)))
+        this.mockMvc.perform(put(BASE_URL + "/" + accountId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsBytes(accountRequestDTO)))
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
@@ -176,7 +171,7 @@ class AccountControllerTest {
     @MethodSource("invalidAccounts")
     void shouldReturnBadRequestWhenCallUpdateWithInvalidAccount(AccountRequestDTO accountRequestDTO) throws Exception {
 
-        this.mockMvc.perform(put(BASE_URL + "/"+ UUID.randomUUID())
+        this.mockMvc.perform(put(BASE_URL + "/" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsBytes(accountRequestDTO)))
                 .andDo(print())
@@ -188,9 +183,9 @@ class AccountControllerTest {
         UUID accountId = UUID.randomUUID();
         Account account = Account.builder().id(accountId).name("Nubank").currency("BRL").build();
 
-        when(repository.findById(accountId)).thenReturn(Optional.of(account));
+        when(repository.findByIdAndUser(accountId, user)).thenReturn(Optional.of(account));
 
-        this.mockMvc.perform(delete(BASE_URL + "/"+ accountId))
+        this.mockMvc.perform(delete(BASE_URL + "/" + accountId))
                 .andDo(print())
                 .andExpect(status().isNoContent());
     }
@@ -205,6 +200,4 @@ class AccountControllerTest {
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
-
-
 }

@@ -37,7 +37,6 @@ class UserControllerTest {
         User user = User.builder().username(userRequestDTO.username()).password(userRequestDTO.password()).build();
 
         when(mapper.toModel(userRequestDTO)).thenReturn(user);
-        when(repository.save(user)).thenReturn(user);
 
         this.mockMvc.perform(post(BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)

@@ -1,9 +1,7 @@
 package com.budgetapi.user.controller;
 
 import com.budgetapi.user.dto.UserRequestDTO;
-import com.budgetapi.user.mapper.UserMapper;
-import com.budgetapi.user.model.User;
-import com.budgetapi.user.repository.UserRepository;
+import com.budgetapi.user.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,14 +18,12 @@ import javax.validation.Valid;
 public class UserController {
 
     public static final String BASE_URL = "/users";
-    private final UserRepository repository;
-    private final UserMapper mapper;
+    private final UserService userService;
 
     @PostMapping()
     @ResponseStatus(code = HttpStatus.CREATED)
     public void create(@RequestBody @Valid UserRequestDTO userRequestDTO) {
-        User user = mapper.toModel(userRequestDTO);
-        repository.save(user);
+        userService.save(userRequestDTO);
     }
 
 }

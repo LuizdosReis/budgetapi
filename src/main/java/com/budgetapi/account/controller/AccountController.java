@@ -6,6 +6,7 @@ import com.budgetapi.account.mapper.AccountMapper;
 import com.budgetapi.account.model.Account;
 import com.budgetapi.account.repository.AccountRepository;
 import com.budgetapi.erro.NotFoundException;
+import com.budgetapi.user.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,17 +36,18 @@ public class AccountController {
 
     private AccountRepository repository;
     private AccountMapper mapper;
+    private UserService userService;
 
     @GetMapping
     public Set<AccountDTO> getAll() {
-        return StreamSupport.stream(repository.findAll().spliterator(), false)
+        return StreamSupport.stream(repository.findAllByUser(userService.getCurrentUser()).spliterator(), false)
                 .map(mapper::toDTO)
                 .collect(Collectors.toSet());
     }
 
     @GetMapping(path = "/{id}")
     public AccountDTO getById(@PathVariable UUID id) {
-        return repository.findById(id)
+        return repository.findByIdAndUser(id, userService.getCurrentUser())
                 .map(mapper::toDTO)
                 .orElseThrow(() -> new NotFoundException(String.format(ACCOUNT_NOT_FOUND, id)));
     }
@@ -54,13 +56,14 @@ public class AccountController {
     @ResponseStatus(code = HttpStatus.CREATED)
     public AccountDTO create(@RequestBody @Valid AccountRequestDTO accountRequestDTO) {
         Account account = mapper.toModel(accountRequestDTO);
+        account.setUser(userService.getCurrentUser());
         repository.save(account);
         return mapper.toDTO(account);
     }
 
-    @PutMapping ("/{id}")
+    @PutMapping("/{id}")
     public AccountDTO update(@PathVariable @NotNull UUID id, @RequestBody @Valid AccountRequestDTO accountRequestDTO) {
-        return repository.findById(id)
+        return repository.findByIdAndUser(id, userService.getCurrentUser())
                 .map(account -> {
                     mapper.updateModel(accountRequestDTO, account);
                     return mapper.toDTO(account);
@@ -71,7 +74,7 @@ public class AccountController {
     @DeleteMapping(path = "/{id}")
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id) {
-        Account account = repository.findById(id)
+        Account account = repository.findByIdAndUser(id, userService.getCurrentUser())
                 .orElseThrow(() -> new NotFoundException(String.format(ACCOUNT_NOT_FOUND, id)));
         repository.delete(account);
     }

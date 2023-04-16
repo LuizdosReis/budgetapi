@@ -27,10 +27,12 @@ public class User implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
+    @Getter
     @NotBlank
     @NotNull
     private String username;
 
+    @Getter
     @NotBlank
     @NotNull
     private String password;
