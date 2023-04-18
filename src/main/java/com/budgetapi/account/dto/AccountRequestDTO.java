@@ -1,9 +1,8 @@
 package com.budgetapi.account.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
-
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 public record AccountRequestDTO(
         @NotBlank
@@ -14,4 +13,5 @@ public record AccountRequestDTO(
         @NotNull
         @Length(min = 3, max = 3)
         String currency
-){}
+) {
+}

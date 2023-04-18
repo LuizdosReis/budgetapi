@@ -41,9 +41,9 @@ public class SecurityConfig {
         http
                 .csrf().disable()
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeRequests(auth -> {
-                    auth.antMatchers("/actuator/**").permitAll();
-                    auth.antMatchers(HttpMethod.POST, UserController.BASE_URL).permitAll();
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers("/actuator/**").permitAll();
+                    auth.requestMatchers(HttpMethod.POST, UserController.BASE_URL).permitAll();
                     auth.anyRequest().authenticated();
                 })
                 .oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
