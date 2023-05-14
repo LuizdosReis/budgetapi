@@ -25,7 +25,7 @@ class CustomUsernamePasswordAuthenticationFilterTest extends AbstractControllerT
                         .param(PASSWORD, "password"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isNotEmpty());
+                .andExpect(jsonPath("$.accessToken").isNotEmpty());
     }
 
     @Test

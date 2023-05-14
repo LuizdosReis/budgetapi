@@ -1,5 +1,6 @@
 package com.budgetapi.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -54,7 +56,7 @@ public class CustomUsernamePasswordAuthenticationFilter extends UsernamePassword
                 .claim("scope", scope)
                 .build();
         String token = this.encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
-        response.getWriter().write(token);
+        response.getWriter().write(new ObjectMapper().writeValueAsString(Map.of("accessToken", token)));
         response.addHeader("Authorization", token);
     }
 
