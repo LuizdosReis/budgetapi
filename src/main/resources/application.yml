@@ -24,6 +24,12 @@ server:
   servlet:
     context-path: /api
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info, health, metrics
+
 rsa:
   private-key: classpath:certs/private.pem
   public-key: classpath:certs/public.pem
