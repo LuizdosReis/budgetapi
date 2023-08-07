@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import static com.budgetapi.account.controller.AccountController.BASE_URL;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -151,6 +152,8 @@ class AccountControllerTest extends AbstractControllerTest {
                 .andExpect(jsonPath("$.name", is(accountRequestDTO.name())))
                 .andExpect(jsonPath("$.currency", is(accountRequestDTO.currency())))
                 .andExpect(jsonPath("$.id", is(accountId.toString())));
+
+        verify(repository).save(account);
     }
 
     @Test

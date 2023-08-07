@@ -66,6 +66,7 @@ public class AccountController {
         return repository.findByIdAndUser(id, userService.getCurrentUser())
                 .map(account -> {
                     mapper.updateModel(accountRequestDTO, account);
+                    repository.save(account);
                     return mapper.toDTO(account);
                 })
                 .orElseThrow(() -> new NotFoundException(String.format(ACCOUNT_NOT_FOUND, id)));
