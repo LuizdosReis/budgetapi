@@ -1,5 +1,6 @@
 package com.budgetapi;
 
+import com.budgetapi.factories.UserFactory;
 import com.budgetapi.user.model.User;
 import com.budgetapi.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,11 +21,7 @@ public abstract class AbstractControllerTest {
     @MockBean
     private UserRepository userRepository;
 
-    public final User user = User.builder()
-            .username("user")
-            .password("$2a$10$smU2UmQgtZ2wObOMhcAr0.MhNN6tWv/Q38JmGev6JmDZZ50a1xfJ2")
-            .roles("USER")
-            .build();
+    public final User user = UserFactory.createUser();
 
     @BeforeEach
     void setUp() {
