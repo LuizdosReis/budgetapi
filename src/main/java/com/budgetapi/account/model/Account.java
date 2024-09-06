@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
 import org.hibernate.validator.constraints.Length;
 
 import java.util.UUID;
@@ -24,9 +25,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = Account.TABLE_NAME)
+@SQLDelete(sql = "UPDATE accounts SET deleted = true WHERE id=?")
 public class Account {
 
-    public static final String TABLE_NAME = "Accounts";
+    public static final String TABLE_NAME = "accounts";
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -48,5 +50,8 @@ public class Account {
     @NotNull
     @ManyToOne
     private User user;
+
+    @Getter
+    private boolean deleted = Boolean.FALSE;
 
 }

@@ -12,5 +12,7 @@ import java.util.UUID;
 public interface AccountRepository extends CrudRepository<Account, UUID> {
     Iterable<Account> findAllByUser(User user);
 
+    Iterable<Account> findAllByUserAndDeletedIsFalse(User user);
+
     Optional<Account> findByIdAndUser(UUID uuid, User user);
 }
