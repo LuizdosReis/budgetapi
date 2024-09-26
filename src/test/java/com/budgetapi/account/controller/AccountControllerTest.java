@@ -134,7 +134,7 @@ class AccountControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    void shouldUpdateAccountWhenCallCreate() throws Exception {
+    void shouldUpdateAccountWhenCallEditEndpoint() throws Exception {
         UUID accountId = UUID.randomUUID();
         AccountRequestDTO accountRequestDTO = new AccountRequestDTO("Santander", "EUR");
         Account account = Account.builder().id(accountId).name("Nubank").user(user).currency("BRL").build();
