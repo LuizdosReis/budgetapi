@@ -6,6 +6,7 @@ import com.budgetapi.account.mapper.AccountMapper;
 import com.budgetapi.account.model.Account;
 import com.budgetapi.account.repository.AccountRepository;
 import com.budgetapi.erro.NotFoundException;
+import com.budgetapi.user.model.User;
 import com.budgetapi.user.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -18,13 +19,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @AllArgsConstructor
 @RestController
@@ -39,8 +41,12 @@ public class AccountController {
     private UserService userService;
 
     @GetMapping
-    public Set<AccountDTO> getAll() {
-        return StreamSupport.stream(repository.findAllByUser(userService.getCurrentUser()).spliterator(), false)
+    public Set<AccountDTO> getAll(@RequestParam(required = false, defaultValue = "false") boolean includeDeleted) {
+        User currentUser = userService.getCurrentUser();
+        List<Account> accounts = includeDeleted ? repository.findAllByUser(currentUser)
+                : repository.findAllByUserAndDeletedIsFalse(currentUser);
+
+        return accounts.stream()
                 .map(mapper::toDTO)
                 .collect(Collectors.toSet());
     }

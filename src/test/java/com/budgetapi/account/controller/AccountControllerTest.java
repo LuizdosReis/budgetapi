@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import static com.budgetapi.account.controller.AccountController.BASE_URL;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -67,22 +68,40 @@ class AccountControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    void shouldReturnStatusOkWhenCallGetAll() throws Exception {
+    void shouldNotIncludeDeletedAccountWhenCallGetAllWithoutIncludeDeletedParam() throws Exception {
         UUID uuid = UUID.randomUUID();
         Account account = Account.builder().id(uuid).name("Nubank").currency("BRL").build();
         AccountDTO accountDTO = new AccountDTO(account.getId(), account.getName(), account.getCurrency());
 
-        when(repository.findAll()).thenReturn(List.of(account));
+        when(repository.findAllByUserAndDeletedIsFalse(user)).thenReturn(List.of(account));
         when(mapper.toDTO(account)).thenReturn(accountDTO);
 
         this.mockMvc.perform(get(BASE_URL))
                 .andDo(print())
                 .andExpect(status().isOk());
+
+        verify(repository, times(1)).findAllByUserAndDeletedIsFalse(user);
+    }
+
+    @Test
+    void shouldIncludeAllAccountsWhenCallGetWithIncludeDeletedParam() throws Exception {
+        UUID uuid = UUID.randomUUID();
+        Account account = Account.builder().id(uuid).name("Nubank").currency("BRL").build();
+        AccountDTO accountDTO = new AccountDTO(account.getId(), account.getName(), account.getCurrency());
+
+        when(repository.findAllByUser(user)).thenReturn(List.of(account));
+        when(mapper.toDTO(account)).thenReturn(accountDTO);
+
+        this.mockMvc.perform(get(BASE_URL).queryParam("includeDeleted", "true"))
+                .andDo(print())
+                .andExpect(status().isOk());
+
+        verify(repository, times(1)).findAllByUser(user);
     }
 
     @Test
     void shouldReturnEmptyListWhenFindAllReturnEmpty() throws Exception {
-        when(repository.findAll()).thenReturn(List.of());
+        when(repository.findAllByUserAndDeletedIsFalse(user)).thenReturn(List.of());
 
         this.mockMvc.perform(get(BASE_URL))
                 .andDo(print())
