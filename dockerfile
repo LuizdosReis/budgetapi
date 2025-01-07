@@ -16,4 +16,4 @@ USER juser
 
 HEALTHCHECK --interval=5s --timeout=3s CMD curl --fail http://localhost:8080/api/actuator/health || exit 1
 
-CMD ["java", "-jar", "budgetapi-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-Xms64m", "-Xmx64m", "-XX:+UseG1GC", "-jar", "budgetapi-0.0.1-SNAPSHOT.jar"]
