@@ -1,6 +1,7 @@
 package com.budgetapi.account.repository;
 
 import com.budgetapi.account.model.Account;
+import com.budgetapi.auditing.AuditingConfig;
 import com.budgetapi.factories.AccountFactory;
 import com.budgetapi.factories.UserFactory;
 import com.budgetapi.user.model.User;
@@ -10,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.context.annotation.Import;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Import(AuditingConfig.class)
 class AccountRepositoryTest {
 
     @Autowired
@@ -119,5 +123,32 @@ class AccountRepositoryTest {
 
         Account account = accountRepository.findById(account1.getId()).orElseThrow();
         assertThat(account.isDeleted()).isTrue();
+    }
+
+    @Test
+    void save_shouldSetCreatedDateAndNotSetUpdatedDate() {
+        Account account = AccountFactory.createAccount(user);
+        entityManager.persist(account);
+        entityManager.flush();
+
+        assertThat(account.getCreateDate()).isNotNull();
+        assertThat(account.getModifiedDate()).isNull();
+    }
+
+    @Test
+    void update_shouldNotChangeCreatedDateAndSetUpdatedDate() {
+        Account account = AccountFactory.createAccount(user);
+        entityManager.persist(account);
+        entityManager.flush();
+
+        LocalDateTime createDate = account.getCreateDate();
+
+        account.setName("updatedName");
+
+        entityManager.persist(account);
+        entityManager.flush();
+
+        assertThat(account.getCreateDate()).isEqualTo(createDate);
+        assertThat(account.getModifiedDate()).isNotNull();
     }
 }
