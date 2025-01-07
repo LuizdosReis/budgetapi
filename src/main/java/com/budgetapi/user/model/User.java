@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -22,6 +23,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User implements Serializable {
+    
+    @Serial
+    private static final long serialVersionUID = 8842499629765771389L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
