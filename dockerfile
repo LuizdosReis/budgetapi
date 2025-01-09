@@ -1,4 +1,4 @@
-FROM openjdk:17-alpine3.14
+FROM eclipse-temurin:21.0.5_11-jdk-alpine
 
 RUN apk --no-cache add curl
 
