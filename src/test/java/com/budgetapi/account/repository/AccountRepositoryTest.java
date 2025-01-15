@@ -14,10 +14,12 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.byLessThan;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -67,7 +69,7 @@ class AccountRepositoryTest {
 
     @Test
     void findAllByUser_shouldNotReturnAccountsFromOtherUsers() {
-        User otherUser = UserFactory.createUser("otherUser");
+        User otherUser = UserFactory.createUser(builder -> builder.username("otherUser"));
         entityManager.persist(otherUser);
         Account otherUseraccount = AccountFactory.createAccount(otherUser);
         entityManager.persist(otherUseraccount);
@@ -97,7 +99,7 @@ class AccountRepositoryTest {
 
     @Test
     void findByIdAndUser_shouldReturnEmptyWhenAccountBelongsToOtherUser() {
-        User otherUser = UserFactory.createUser("otherUser");
+        User otherUser = UserFactory.createUser(builder -> builder.username("otherUser"));
         entityManager.persist(otherUser);
         Account otherUseraccount = AccountFactory.createAccount(otherUser);
         entityManager.persist(otherUseraccount);
@@ -109,7 +111,7 @@ class AccountRepositoryTest {
 
     @Test
     void findByIdAndUser_shouldReturnEmptyWhenOtherUserTriesToAccessAccount() {
-        User otherUser = UserFactory.createUser("otherUser");
+        User otherUser = UserFactory.createUser(builder -> builder.username("otherUser"));
         entityManager.persist(otherUser);
 
         Optional<Account> foundAccount = accountRepository.findByIdAndUser(account1.getId(), otherUser);
@@ -130,9 +132,12 @@ class AccountRepositoryTest {
         Account account = AccountFactory.createAccount(user);
         entityManager.persist(account);
         entityManager.flush();
+        entityManager.detach(account);
 
-        assertThat(account.getCreateDate()).isNotNull();
-        assertThat(account.getModifiedDate()).isNull();
+        Account savedAccount = entityManager.find(Account.class, account.getId());
+
+        assertThat(savedAccount.getCreateDate()).isNotNull();
+        assertThat(savedAccount.getModifiedDate()).isNull();
     }
 
     @Test
@@ -147,8 +152,11 @@ class AccountRepositoryTest {
 
         entityManager.persist(account);
         entityManager.flush();
+        entityManager.detach(account);
 
-        assertThat(account.getCreateDate()).isEqualTo(createDate);
-        assertThat(account.getModifiedDate()).isNotNull();
+        Account savedAccount = entityManager.find(Account.class, account.getId());
+
+        assertThat(savedAccount.getCreateDate()).isCloseTo(createDate, byLessThan(1, ChronoUnit.MICROS));
+        assertThat(savedAccount.getModifiedDate()).isNotNull();
     }
 }
