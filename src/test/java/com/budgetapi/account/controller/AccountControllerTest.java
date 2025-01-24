@@ -21,9 +21,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import static com.budgetapi.account.controller.AccountController.ACCOUNT_NOT_FOUND;
 import static com.budgetapi.account.controller.AccountController.BASE_URL;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -66,7 +68,9 @@ class AccountControllerTest extends AbstractControllerTest {
 
         this.mockMvc.perform(get(BASE_URL + "/" + uuid))
                 .andDo(print())
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message", is(String.format(ACCOUNT_NOT_FOUND, uuid))))
+                .andExpect(jsonPath("$.timestamp", notNullValue()));
     }
 
     @Test
@@ -188,7 +192,9 @@ class AccountControllerTest extends AbstractControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsBytes(accountRequestDTO)))
                 .andDo(print())
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message", is(String.format(ACCOUNT_NOT_FOUND, accountId))))
+                .andExpect(jsonPath("$.timestamp", notNullValue()));
     }
 
     @ParameterizedTest
@@ -222,6 +228,8 @@ class AccountControllerTest extends AbstractControllerTest {
 
         this.mockMvc.perform(delete(BASE_URL + "/" + accountId))
                 .andDo(print())
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message", is(String.format(ACCOUNT_NOT_FOUND, accountId))))
+                .andExpect(jsonPath("$.timestamp", notNullValue()));
     }
 }

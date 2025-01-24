@@ -33,8 +33,8 @@ import java.util.stream.Collectors;
 @RequestMapping(AccountController.BASE_URL)
 public class AccountController {
 
-    public static final String BASE_URL = "/accounts";
-    private static final String ACCOUNT_NOT_FOUND = "Account with id %s not found";
+    protected static final String BASE_URL = "/accounts";
+    protected static final String ACCOUNT_NOT_FOUND = "Account with id %s not found";
 
     private AccountRepository repository;
     private AccountMapper mapper;
