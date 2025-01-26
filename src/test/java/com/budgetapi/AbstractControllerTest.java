@@ -17,7 +17,7 @@ import static org.mockito.Mockito.when;
 public abstract class AbstractControllerTest {
 
     @MockitoBean
-    private UserService userService;
+    protected UserService userService;
 
     public final User user = UserFactory.createUser();
 
