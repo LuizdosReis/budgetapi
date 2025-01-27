@@ -112,14 +112,14 @@ class CategoryServiceTest {
     }
 
     @Test
-    void findAll_shouldCallFindAllByUser_whenIncludeDeletedIsFalse() {
-        service.findAll(false);
+    void findAll_shouldCallFindAllByUser_whenIncludeDeletedIsTrue() {
+        service.findAll(true);
         verify(repository, times(1)).findAllByUser(user);
     }
 
     @Test
-    void findAll_shouldCallFindAllByUserAndDeletedIsFalse_whenIncludeDeletedIsTrue() {
-        service.findAll(true);
+    void findAll_shouldCallFindAllByUserAndDeletedIsFalse_whenIncludeDeletedIsFalse() {
+        service.findAll(false);
         verify(repository, times(1)).findAllByUserAndDeletedIsFalse(user);
     }
 
@@ -131,7 +131,7 @@ class CategoryServiceTest {
         when(repository.findAllByUser(user)).thenReturn(categories);
         when(mapper.toDTO(categories)).thenReturn(categoryDTOS);
 
-        Set<CategoryDTO> foundCategories = service.findAll(false);
+        Set<CategoryDTO> foundCategories = service.findAll(true);
 
         verify(mapper, times(1)).toDTO(categories);
         verify(repository, times(1)).findAllByUser(user);

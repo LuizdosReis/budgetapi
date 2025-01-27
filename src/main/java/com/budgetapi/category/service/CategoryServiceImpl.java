@@ -49,8 +49,8 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public Set<CategoryDTO> findAll(boolean includeDeleted) {
         Set<Category> categories = includeDeleted ?
-                repository.findAllByUserAndDeletedIsFalse(userService.getCurrentUser()) :
-                repository.findAllByUser(userService.getCurrentUser());
+                repository.findAllByUser(userService.getCurrentUser()) :
+                repository.findAllByUserAndDeletedIsFalse(userService.getCurrentUser());
 
         return mapper.toDTO(categories);
     }
