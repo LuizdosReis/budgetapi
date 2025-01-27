@@ -110,7 +110,7 @@ class CategoryRepositoryTest {
     }
 
     @Test
-    void findByIdAndUser_shouldReturnEmptyWhenOtherUserTriesToAccessAccount() {
+    void findByIdAndUser_shouldReturnEmptyWhenOtherUserTriesToAccessCategory() {
         User otherUser = UserFactory.createUser(builder -> builder.username("otherUser"));
         entityManager.persist(otherUser);
 
