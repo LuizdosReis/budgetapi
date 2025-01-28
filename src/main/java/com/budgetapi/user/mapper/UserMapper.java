@@ -4,11 +4,14 @@ import com.budgetapi.user.dto.UserRequestDTO;
 import com.budgetapi.user.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Mapper(componentModel = "spring")
 public abstract class UserMapper {
+
+    public static final UserMapper MAPPER = Mappers.getMapper(UserMapper.class);
 
     @Autowired
     protected PasswordEncoder passwordEncoder;
