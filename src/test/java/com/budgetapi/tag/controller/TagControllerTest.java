@@ -119,8 +119,8 @@ class TagControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    @DisplayName("GET /tags/{id} returns 404 not found when tag is not found")
-    void getById_returns404_whenIdIsNotFound() throws Exception {
+    @DisplayName("GET /tags/{id} returns 404 not found when service throws notFoundException")
+    void getById_returns404_whenServiceThrowsNotFoundException() throws Exception {
         UUID id = UUID.randomUUID();
 
         when(tagService.findById(id)).thenThrow(new NotFoundException(String.format(TAG_NOT_FOUND, id)));

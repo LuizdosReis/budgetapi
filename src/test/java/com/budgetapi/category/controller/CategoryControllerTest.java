@@ -36,7 +36,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -53,8 +52,8 @@ class CategoryControllerTest extends AbstractControllerTest {
     private CategoryService categoryService;
 
     @Test
-    @DisplayName("GET all categories returns a list of categories")
-    void getAll_returnsAllCategories() throws Exception {
+    @DisplayName("GET /categories returns 200 OK with list with id, name and type")
+    void getAll_returnsAll() throws Exception {
         Set<CategoryDTO> categories = Set.of(
                 new CategoryDTO(UUID.randomUUID(), "category1", Type.EXPENSE),
                 new CategoryDTO(UUID.randomUUID(), "category2", Type.EXPENSE),
@@ -64,7 +63,6 @@ class CategoryControllerTest extends AbstractControllerTest {
         when(categoryService.findAll(anyBoolean())).thenReturn(categories);
 
         this.mockMvc.perform(get(CategoryController.BASE_URL))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(categories.size())))
                 .andExpect(jsonPath("$[*].id", containsInAnyOrder(categories.stream().map(CategoryDTO::id).map(UUID::toString).toArray())))
@@ -73,18 +71,17 @@ class CategoryControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    @DisplayName("GET all categories returns an empty list when no categories are found")
+    @DisplayName("GET /categories returns 200 OK with empty list when no categories are found")
     void getAll_returnsEmptyList() throws Exception {
         when(categoryService.findAll(anyBoolean())).thenReturn(Set.of());
 
         this.mockMvc.perform(get(CategoryController.BASE_URL))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
-    @DisplayName("GET all categories call service with false by default")
+    @DisplayName("GET /categories calls service with false by default")
     void getAll_callsServiceWithFalse_whenIncludedDeletedIsNotProvide() throws Exception {
         this.mockMvc.perform(get(CategoryController.BASE_URL));
 
@@ -92,7 +89,7 @@ class CategoryControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    @DisplayName("GET all categories call service with true when includeDeleted is true")
+    @DisplayName("GET /categories calls service with true when includeDeleted is true")
     void getAll_callsServiceWithTrue() throws Exception {
         this.mockMvc.perform(get(CategoryController.BASE_URL).queryParam("includeDeleted", "true"));
 
@@ -100,7 +97,7 @@ class CategoryControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    @DisplayName("GET all categories call service with false when includeDeleted is false")
+    @DisplayName("GET /categories calls service with false when includeDeleted is false")
     void getAll_callsServiceWithFalse() throws Exception {
         this.mockMvc.perform(get(CategoryController.BASE_URL).queryParam("includeDeleted", "false"));
 
@@ -108,15 +105,14 @@ class CategoryControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    @DisplayName("GET by id returns a category when category is found")
-    void getById_returnsCategory() throws Exception {
+    @DisplayName("GET /categories/{id} returns 200 OK with id, name and type")
+    void getById_returnsIdNameAndTYpe() throws Exception {
         UUID id = UUID.randomUUID();
         CategoryDTO category = new CategoryDTO(id, "category", Type.EXPENSE);
 
         when(categoryService.findById(id)).thenReturn(category);
 
         this.mockMvc.perform(get(CategoryController.BASE_URL + "/" + id))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()))
                 .andExpect(jsonPath("$.name").value(category.name()))
@@ -124,53 +120,49 @@ class CategoryControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    @DisplayName("GET by id returns 404 when category is not found")
-    void getById_returns404_whenCategoryIsNotFound() throws Exception {
+    @DisplayName("GET /categories/{id} returns 404 not found when service throws notFoundException")
+    void getById_returns404_whenServiceThrowsNotFoundException() throws Exception {
         UUID id = UUID.randomUUID();
 
         when(categoryService.findById(id)).thenThrow(new NotFoundException(String.format(CATEGORY_NOT_FOUND, id)));
 
         this.mockMvc.perform(get(CategoryController.BASE_URL + "/" + id))
-                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message", is(String.format(CATEGORY_NOT_FOUND, id))))
                 .andExpect(jsonPath("$.timestamp", notNullValue()));
     }
 
     @Test
-    @DisplayName("POST category and returns 201 when payload is valid")
-    void postCategory_createsAndReturns201_whenPayloadIsValid() throws Exception {
+    @DisplayName("POST /categories returns 201 and calls save when payload is valid")
+    void post_createsAndReturns201_whenPayloadIsValid() throws Exception {
         CategoryRequestDTO categoryRequestDTO = new CategoryRequestDTO("category", Type.EXPENSE);
 
         this.mockMvc.perform(post(CategoryController.BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryRequestDTO)))
-                .andDo(print())
                 .andExpect(status().isCreated());
 
         verify(categoryService, times(1)).save(categoryRequestDTO);
     }
 
     @ParameterizedTest
-    @DisplayName("POST category do not save category and returns 400 when payload is invalid")
+    @DisplayName("POST /categories returns 400 bad request and do not calls save when payload is invalid")
     @MethodSource("invalidCategoryRequestDTOs")
-    void postCategory_doNotSaveCategoryAndReturns400_whenPayloadIsInvalid(CategoryRequestDTO payload) throws Exception {
+    void post_doNotSaveAndReturns400_whenPayloadIsInvalid(CategoryRequestDTO payload) throws Exception {
         this.mockMvc.perform(post(CategoryController.BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
-                .andDo(print())
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(categoryService);
     }
 
     @Test
-    @DisplayName("POST category do not save category and returns 400 when payload is empty")
+    @DisplayName("POST /categories returns 400 bad request and do not calls save when payload is empty")
     void postCategory_doNotSaveCategoryAndReturns400_whenPayloadIsEmpty() throws Exception {
         this.mockMvc.perform(post(CategoryController.BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andDo(print())
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(categoryService);
@@ -187,23 +179,22 @@ class CategoryControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    @DisplayName("PUT category updates category and returns 200 when payload is valid")
-    void putCategory_updateCategoryAndReturns200_whenPayloadIsValid() throws Exception {
+    @DisplayName("PUT /categories returns 200 OK and calls update when payload is valid")
+    void put_updateAndReturns200_whenPayloadIsValid() throws Exception {
         UUID id = UUID.randomUUID();
         CategoryRequestDTO categoryRequestDTO = new CategoryRequestDTO("category", Type.EXPENSE);
 
         this.mockMvc.perform(put(CategoryController.BASE_URL + "/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryRequestDTO)))
-                .andDo(print())
                 .andExpect(status().isOk());
 
         verify(categoryService, times(1)).update(id, categoryRequestDTO);
     }
 
     @Test
-    @DisplayName("PUT category returns 404 when category is not found")
-    void putCategory_returns404_whenCategoryIsNotFound() throws Exception {
+    @DisplayName("PUT /categories/{id} returns 404 not found when service throws notFoundException")
+    void put_returns404_whenServiceThrowsNotFoundException() throws Exception {
         UUID id = UUID.randomUUID();
         CategoryRequestDTO categoryRequestDTO = new CategoryRequestDTO("category", Type.EXPENSE);
 
@@ -212,7 +203,6 @@ class CategoryControllerTest extends AbstractControllerTest {
         this.mockMvc.perform(put(CategoryController.BASE_URL + "/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryRequestDTO)))
-                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message", is(String.format(CATEGORY_NOT_FOUND, id))))
                 .andExpect(jsonPath("$.timestamp", notNullValue()));
@@ -220,53 +210,49 @@ class CategoryControllerTest extends AbstractControllerTest {
     }
 
     @ParameterizedTest
-    @DisplayName("PUT category do not update category and returns 400 when payload is invalid")
+    @DisplayName("PUT /categories/{id} do not calls update and returns 400 when payload is invalid")
     @MethodSource("invalidCategoryRequestDTOs")
-    void updateCategory_doNotUpdateCategoryAndReturns400_whenPayloadIsInvalid(CategoryRequestDTO payload) throws Exception {
+    void update_doNotUpdateAndReturns400_whenPayloadIsInvalid(CategoryRequestDTO payload) throws Exception {
         UUID id = UUID.randomUUID();
         this.mockMvc.perform(put(CategoryController.BASE_URL + "/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
-                .andDo(print())
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(categoryService);
     }
 
     @Test
-    @DisplayName("PUT category do not update category and returns 400 when payload is empty")
-    void updateCategory_doNotUpdateCategoryAndReturns400_whenPayloadIsEmpty() throws Exception {
+    @DisplayName("PUT /categories/{id} do not calls update and returns 400 when payload is empty")
+    void update_doNotUpdateAndReturns400_whenPayloadIsEmpty() throws Exception {
         UUID id = UUID.randomUUID();
         this.mockMvc.perform(put(CategoryController.BASE_URL + "/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andDo(print())
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(categoryService);
     }
 
     @Test
-    @DisplayName("DELETE category returns 204")
-    void deleteCategory_returns204() throws Exception {
+    @DisplayName("DELETE /categories/{id} returns 204 and calls delete")
+    void delete_returns204() throws Exception {
         UUID id = UUID.randomUUID();
 
         this.mockMvc.perform(delete(CategoryController.BASE_URL + "/" + id))
-                .andDo(print())
                 .andExpect(status().isNoContent());
 
         verify(categoryService, times(1)).delete(id);
     }
 
     @Test
-    @DisplayName("DELETE category returns 404 when category is not found")
-    void deleteCategory_returns404() throws Exception {
+    @DisplayName("DELETE /categories/{id} returns 404 not found when service throws notFoundException")
+    void delete_returns404_whenServiceThrowsNotFoundException() throws Exception {
         UUID id = UUID.randomUUID();
 
         doThrow(new NotFoundException(String.format(CATEGORY_NOT_FOUND, id))).when(categoryService).delete(id);
 
         this.mockMvc.perform(delete(CategoryController.BASE_URL + "/" + id))
-                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message", is(String.format(CATEGORY_NOT_FOUND, id))))
                 .andExpect(jsonPath("$.timestamp", notNullValue()));
