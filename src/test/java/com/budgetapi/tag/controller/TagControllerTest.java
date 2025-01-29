@@ -28,13 +28,15 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -51,8 +53,8 @@ class TagControllerTest extends AbstractControllerTest {
     private TagService tagService;
 
     @Test
-    @DisplayName("GET /tags returns 200 OK with category list with name and id")
-    void getAll_returnsAllCategories() throws Exception {
+    @DisplayName("GET /tags returns 200 OK with list with name and id")
+    void getAll_returnsAll() throws Exception {
         Set<TagDTO> tags = Set.of(
                 new TagDTO(UUID.randomUUID(), "tag_name1"),
                 new TagDTO(UUID.randomUUID(), "tag_name2"),
@@ -103,8 +105,8 @@ class TagControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    @DisplayName("GET /tags/{id} returns 200 OK with category with name and id")
-    void getById_returnsCategory() throws Exception {
+    @DisplayName("GET /tags/{id} returns 200 OK with name and id")
+    void getById_returnsNameAndId() throws Exception {
         UUID id = UUID.randomUUID();
         TagDTO tag = new TagDTO(id, "tag_name1");
 
@@ -117,8 +119,8 @@ class TagControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    @DisplayName("GET /tags/{id} returns 404 not found when category is not found")
-    void getById_returns404_whenCategoryIsNotFound() throws Exception {
+    @DisplayName("GET /tags/{id} returns 404 not found when tag is not found")
+    void getById_returns404_whenIdIsNotFound() throws Exception {
         UUID id = UUID.randomUUID();
 
         when(tagService.findById(id)).thenThrow(new NotFoundException(String.format(TAG_NOT_FOUND, id)));
@@ -143,10 +145,81 @@ class TagControllerTest extends AbstractControllerTest {
     }
 
     @ParameterizedTest
-    @DisplayName("POST /tags return 400 bad request and do not when payload is invalid")
+    @DisplayName("POST /tags return 400 bad request and do not calls save when payload is invalid")
     @MethodSource("invalidTagRequestDTOs")
     void post_doNotSaveAndReturns400_whenPayloadIsInvalid(TagRequestDTO payload, String fieldErrorMessage) throws Exception {
         this.mockMvc.perform(post(TagController.BASE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("Field Validation Errors")))
+                .andExpect(jsonPath("$.timestamp", notNullValue()))
+                .andExpect(jsonPath("$.fieldErrors[*].field", contains("name")))
+                .andExpect(jsonPath("$.fieldErrors[*].message", contains(fieldErrorMessage)))
+                .andExpect(jsonPath("$.fieldErrors[*].rejectedValue", contains(payload.name())));
+
+        verifyNoInteractions(tagService);
+    }
+
+    @Test
+    @DisplayName("POST /tags do not calls save and returns 400 when payload is empty")
+    void post_doNotSaveAndReturns400_whenPayloadIsEmpty() throws Exception {
+        this.mockMvc.perform(post(TagController.BASE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("Field Validation Errors")))
+                .andExpect(jsonPath("$.timestamp", notNullValue()));
+
+        verifyNoInteractions(tagService);
+    }
+
+    private static Stream<Arguments> invalidTagRequestDTOs() {
+        return Stream.of(
+                Arguments.of(new TagRequestDTO(""), "Name must be between 5 and 50 characters"),
+                Arguments.of(new TagRequestDTO(null), "Name cannot be null"),
+                Arguments.of(new TagRequestDTO("a"), "Name must be between 5 and 50 characters"),
+                Arguments.of(new TagRequestDTO("a".repeat(51)), "Name must be between 5 and 50 characters")
+        );
+    }
+
+    @Test
+    @DisplayName("PUT /tags/{id} returns 200 OK and calls update when payload is valid")
+    void put_updateAndReturns200_whenPayloadIsValid() throws Exception {
+        UUID id = UUID.randomUUID();
+        TagRequestDTO payload = new TagRequestDTO("tag_name");
+
+        this.mockMvc.perform(put(TagController.BASE_URL + "/" + id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk());
+
+        verify(tagService, times(1)).update(id, payload);
+    }
+
+    @Test
+    @DisplayName("PUT /tags/{id} returns 404 not found when service throws notFoundException")
+    void put_returns404_whenServiceThrowsNotFoundException() throws Exception {
+        UUID id = UUID.randomUUID();
+        TagRequestDTO payload = new TagRequestDTO("tag_name");
+
+        doThrow(new NotFoundException(String.format(TAG_NOT_FOUND, id))).when(tagService).update(id, payload);
+
+        this.mockMvc.perform(put(TagController.BASE_URL + "/" + id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message", is(String.format(TAG_NOT_FOUND, id))))
+                .andExpect(jsonPath("$.timestamp", notNullValue()));
+
+    }
+
+    @ParameterizedTest
+    @DisplayName("PUT /tags/{id} do not calls update and returns 400 when payload is invalid")
+    @MethodSource("invalidTagRequestDTOs")
+    void put_doNotUpdateAndReturns400_whenPayloadIsInvalid(TagRequestDTO payload, String fieldErrorMessage) throws Exception {
+        UUID id = UUID.randomUUID();
+        this.mockMvc.perform(put(TagController.BASE_URL + "/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest())
@@ -159,23 +232,41 @@ class TagControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    @DisplayName("POST /tags do not save category and returns 400 when payload is empty")
-    void post_doNotSaveAndReturns400_whenPayloadIsEmpty() throws Exception {
-        this.mockMvc.perform(post(TagController.BASE_URL)
+    @DisplayName("PUT /tags/{id} do not calls update and returns 400 when payload is empty")
+    void put_doNotUpdateAndReturns400_whenPayloadIsEmpty() throws Exception {
+        UUID id = UUID.randomUUID();
+        this.mockMvc.perform(put(TagController.BASE_URL + "/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andDo(print())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("Field Validation Errors")))
+                .andExpect(jsonPath("$.timestamp", notNullValue()));
 
         verifyNoInteractions(tagService);
     }
 
-    private static Stream<Arguments> invalidTagRequestDTOs() {
-        return Stream.of(
-                Arguments.of(new TagRequestDTO(""), "Name must be between 5 and 50 characters"),
-                Arguments.of(new TagRequestDTO(null), "Name cannot be null"),
-                Arguments.of(new TagRequestDTO("a"), "Name must be between 5 and 50 characters"),
-                Arguments.of(new TagRequestDTO("a".repeat(51)), "Name must be between 5 and 50 characters")
-        );
+    @Test
+    @DisplayName("DELETE /tags/{id} returns 204 and calls delete")
+    void delete_returns204() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        this.mockMvc.perform(delete(TagController.BASE_URL + "/" + id))
+                .andExpect(status().isNoContent());
+
+        verify(tagService, times(1)).delete(id);
+    }
+
+    @Test
+    @DisplayName("DELETE /tags/{id} returns 404 not found when service throws notFoundException")
+    void delete_returns404_whenServiceThrowsNotFoundException() throws Exception {
+        UUID id = UUID.randomUUID();
+        doThrow(new NotFoundException(String.format(TAG_NOT_FOUND, id))).when(tagService).delete(id);
+
+        this.mockMvc.perform(delete(TagController.BASE_URL + "/" + id))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message", is(String.format(TAG_NOT_FOUND, id))))
+                .andExpect(jsonPath("$.timestamp", notNullValue()));
+
+        verify(tagService, times(1)).delete(id);
     }
 }
