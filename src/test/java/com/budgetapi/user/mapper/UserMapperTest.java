@@ -3,21 +3,23 @@ package com.budgetapi.user.mapper;
 import com.budgetapi.user.dto.UserRequestDTO;
 import com.budgetapi.user.model.User;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class UserMapperTest {
 
-    @Autowired
+    @InjectMocks
     private UserMapper userMapper;
 
-    @MockBean
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @Test

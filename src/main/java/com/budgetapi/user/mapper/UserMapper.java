@@ -2,21 +2,22 @@ package com.budgetapi.user.mapper;
 
 import com.budgetapi.user.dto.UserRequestDTO;
 import com.budgetapi.user.model.User;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public abstract class UserMapper {
+@Component
+@AllArgsConstructor
+public class UserMapper {
 
-    public static final UserMapper MAPPER = Mappers.getMapper(UserMapper.class);
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    protected PasswordEncoder passwordEncoder;
-
-    @Mapping(target = "password", expression = "java(passwordEncoder.encode(dto.password()))")
-    @Mapping(target = "roles", constant = "USER")
-    public abstract User toModel(UserRequestDTO dto);
+    public User toModel(UserRequestDTO dto) {
+        if (dto == null) return null;
+        return User.builder()
+                .username(dto.username())
+                .password(passwordEncoder.encode(dto.password()))
+                .roles("USER")
+                .build();
+    }
 }
