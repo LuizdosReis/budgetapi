@@ -33,7 +33,7 @@ class CustomUsernamePasswordAuthenticationFilterTest {
     @MockitoBean
     private UserRepository userRepository;
 
-    public final User user = UserFactory.createUser();
+    private final User user = UserFactory.createUser();
 
     @BeforeEach
     void setUp() {
@@ -43,7 +43,7 @@ class CustomUsernamePasswordAuthenticationFilterTest {
     @Test
     void shouldGetTokenWhenUsernameAndPasswordAreCorrect() throws Exception {
         this.mvc.perform(post(URL)
-                        .param(USERNAME, "user")
+                        .param(USERNAME, user.getUsername())
                         .param(PASSWORD, "password"))
                 .andDo(print())
                 .andExpect(status().isOk())
