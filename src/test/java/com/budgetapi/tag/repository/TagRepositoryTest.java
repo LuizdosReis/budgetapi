@@ -102,7 +102,7 @@ class TagRepositoryTest {
 
     @Test
     @DisplayName("findByIdAndUser should return tag when exists")
-    void findByIdAndUser_shouldReturnCategoryWhenExists() {
+    void findByIdAndUser_shouldReturnTagWhenExists() {
         Optional<Tag> tagOptional = tagRepository.findByIdAndUser(tag.getId(), user);
 
         assertThat(tagOptional).isPresent().contains(tag);
@@ -132,7 +132,7 @@ class TagRepositoryTest {
 
     @Test
     @DisplayName("findByIdAndUser should return empty when other user tries to access tag")
-    void findByIdAndUser_shouldReturnEmptyWhenOtherUserTriesToAccessCategory() {
+    void findByIdAndUser_shouldReturnEmptyWhenOtherUserTriesToAccessTag() {
         User otherUser = UserFactory.createUser(builder -> builder.username("otherUser"));
         entityManager.persist(otherUser);
 
@@ -151,8 +151,8 @@ class TagRepositoryTest {
     }
 
     @Test
-    @DisplayName("findAllByUser should return all tags for user")
-    void findAllByUser_shouldReturnAllCategoriesForUser() {
+    @DisplayName("findAllByUser should return all tags")
+    void findAllByUser_shouldReturnAllTags() {
         Iterable<Tag> tags = tagRepository.findAllByUser(user);
         assertThat(tags)
                 .hasSize(3)
@@ -161,7 +161,7 @@ class TagRepositoryTest {
 
     @Test
     @DisplayName("findAllByUserAndDeletedIsFalse should not return deleted tags")
-    void findAllByUserAndDeletedIsFalse_shouldReturnAllNotDeletedCategoriesForUser() {
+    void findAllByUserAndDeletedIsFalse_shouldReturnAllNotDeletedTagsForUser() {
         Iterable<Tag> tags = tagRepository.findAllByUserAndDeletedIsFalse(user);
         assertThat(tags)
                 .hasSize(2)
@@ -170,7 +170,7 @@ class TagRepositoryTest {
 
     @Test
     @DisplayName("findAllByUser should not return tags from other user")
-    void findAllByUser_shouldNotReturnCategoriesFromOtherUser() {
+    void findAllByUser_shouldNotReturnTagsFromOtherUser() {
         User otherUser = UserFactory.createUser(builder -> builder.username("otherUser"));
         entityManager.persist(otherUser);
         Tag otherUserTag = TagFactory.create(otherUser);
@@ -185,7 +185,7 @@ class TagRepositoryTest {
 
     @Test
     @DisplayName("findAllByUserAndDeletedIsFalse should not return tags from other user")
-    void findAllByUserAndDeletedIsFalse_shouldNotReturnCategoriesFromOtherUser() {
+    void findAllByUserAndDeletedIsFalse_shouldNotReturnTagsFromOtherUser() {
         User otherUser = UserFactory.createUser(builder -> builder.username("otherUser"));
         entityManager.persist(otherUser);
         Tag otherUserTag = TagFactory.create(otherUser);
