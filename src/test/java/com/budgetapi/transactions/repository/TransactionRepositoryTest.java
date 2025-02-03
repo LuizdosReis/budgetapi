@@ -18,6 +18,8 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -39,24 +41,22 @@ class TransactionRepositoryTest {
     private TransactionRepository repository;
 
     private User user;
-    private Account account;
-    private Category category;
     private Transaction transaction;
+    private Transaction transaction2;
+    private Transaction transaction3;
 
     @BeforeEach
     void setUp() {
         user = entityManager.persist(UserFactory.createUser());
-        account = entityManager.persist(AccountFactory.createAccount(user));
-        category = entityManager.persist(CategoryFactory.create(user));
-        transaction = entityManager.persist(TransactionFactory.create(account, category));
+        transaction = createTransaction(user);
+        transaction2 = createTransaction(user);
+        transaction3 = createDeletedTransaction(user);
+        entityManager.flush();
     }
 
     @Test
     @DisplayName("save should set created date and not set updated date")
     void save_shouldSetCreatedDateAndNotSetUpdatedDate() {
-        Transaction transaction = TransactionFactory.create(account, category);
-        repository.save(transaction);
-        entityManager.flush();
         entityManager.detach(transaction);
 
         Transaction loadTransaction = entityManager.find(Transaction.class, transaction.getId());
@@ -118,5 +118,73 @@ class TransactionRepositoryTest {
 
         Optional<Transaction> transactionOptional = repository.findByIdAndAccountUser(transaction.getId(), otherUser);
         assertThat(transactionOptional).isEmpty();
+    }
+
+    @Test
+    @DisplayName("delete should set deleted to true")
+    void delete_shouldSetDeletedToTrue() {
+        repository.delete(transaction);
+        entityManager.flush();
+
+        Transaction found = repository.findById(transaction.getId()).orElseThrow();
+        assertThat(found.isDeleted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("findByAccountUser should return all transactions")
+    void findByAccountUser_shouldReturnAllTransactions() {
+        Page<Transaction> transactions = repository.findByAccountUser(user, Pageable.unpaged());
+        assertThat(transactions)
+                .hasSize(3)
+                .containsExactlyInAnyOrder(transaction, transaction2, transaction3);
+    }
+
+    @Test
+    @DisplayName("findByAccountUserAndDeletedFalse should not return deleted transactions")
+    void findByAccountUserAndDeletedFalse_shouldReturnNotDeletedTransactions() {
+        Page<Transaction> transactions = repository.findByAccountUserAndDeletedFalse(user, Pageable.unpaged());
+        assertThat(transactions)
+                .hasSize(2)
+                .containsExactlyInAnyOrder(transaction, transaction2);
+    }
+
+    @Test
+    @DisplayName("findByAccountUser should not return transactions from other user")
+    void findByAccountUser_shouldNotReturnCategoriesFromOtherUser() {
+        User otherUser = entityManager.persist(UserFactory.createUser(builder -> builder.username("otherUser")));
+        createTransaction(otherUser);
+
+        Page<Transaction> transactions = repository.findByAccountUser(user, Pageable.unpaged());
+        assertThat(transactions)
+                .hasSize(3)
+                .containsExactlyInAnyOrder(transaction, transaction2, transaction3);
+    }
+
+    @Test
+    @DisplayName("findByAccountUserAndDeletedFalse should not return transactions from other user")
+    void findByAccountUserAndDeletedFalse_shouldNotReturnTransactionsFromOtherUser() {
+        User otherUser = entityManager.persist(UserFactory.createUser(builder -> builder.username("otherUser")));
+        createTransaction(otherUser);
+
+        Page<Transaction> transactions = repository.findByAccountUserAndDeletedFalse(user, Pageable.unpaged());
+        assertThat(transactions)
+                .hasSize(2)
+                .containsExactlyInAnyOrder(transaction, transaction2);
+    }
+
+    private Transaction createTransaction(User user) {
+        Account account = entityManager.persist(AccountFactory.createAccount(user));
+        Category category = entityManager.persist(CategoryFactory.create(user));
+        entityManager.persist(account);
+        entityManager.persist(category);
+        return entityManager.persist(TransactionFactory.create(account, category));
+    }
+
+    private Transaction createDeletedTransaction(User user) {
+        Account account = entityManager.persist(AccountFactory.createAccount(user));
+        Category category = entityManager.persist(CategoryFactory.create(user));
+        entityManager.persist(account);
+        entityManager.persist(category);
+        return entityManager.persist(TransactionFactory.createDeleted(account, category));
     }
 }

@@ -35,6 +35,11 @@ public class TransactionFactory {
         return builder.build();
     }
 
+    public static Transaction createDeleted(Account account, Category category) {
+        return createDeleted(account, category, builder -> {
+        });
+    }
+
     public static Transaction createDeleted(Account account, Category category, Consumer<Transaction.TransactionBuilder> customizer) {
         return create(account, category, customizer.andThen(c -> c.deleted(true)));
     }
