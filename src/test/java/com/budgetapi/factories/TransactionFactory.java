@@ -8,6 +8,7 @@ import lombok.experimental.UtilityClass;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Set;
 import java.util.function.Consumer;
 
 @UtilityClass
@@ -28,7 +29,8 @@ public class TransactionFactory {
                 .category(category)
                 .amount(DEFAULT_AMOUNT)
                 .date(LocalDate.now())
-                .status(TransactionStatus.REGISTERED);
+                .status(TransactionStatus.REGISTERED)
+                .tags(Set.of());
 
         customizer.accept(builder);
 

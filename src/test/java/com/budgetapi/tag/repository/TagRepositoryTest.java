@@ -196,4 +196,30 @@ class TagRepositoryTest {
                 .hasSize(2)
                 .containsExactlyInAnyOrder(tag, tag2);
     }
+
+    @Test
+    @DisplayName("findAllByUserAndDeletedIsFalse should return tags")
+    void findAllByIdInAndUser_shouldReturnTags() {
+        Set<UUID> ids = Set.of(tag.getId(), tag2.getId());
+
+        Iterable<Tag> tags = tagRepository.findAllByIdInAndUser(ids, user);
+        assertThat(tags)
+                .hasSize(2)
+                .containsExactlyInAnyOrder(tag, tag2);
+    }
+
+    @Test
+    @DisplayName("findAllByIdInAndUser should not return tags from other user")
+    void findAllByIdInAndUser_shouldNotReturnTagsFromOtherUser() {
+        User otherUser = UserFactory.createUser(builder -> builder.username("otherUser"));
+        entityManager.persist(otherUser);
+        Tag otherUserTag = TagFactory.create(otherUser);
+        entityManager.persistAndFlush(otherUserTag);
+        Set<UUID> ids = Set.of(tag.getId(), tag2.getId(), otherUserTag.getId());
+
+        Iterable<Tag> tags = tagRepository.findAllByIdInAndUser(ids, user);
+        assertThat(tags)
+                .hasSize(2)
+                .containsExactlyInAnyOrder(tag, tag2);
+    }
 }
