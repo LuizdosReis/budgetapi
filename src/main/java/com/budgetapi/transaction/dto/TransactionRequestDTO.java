@@ -16,6 +16,7 @@ public record TransactionRequestDTO(@NotNull(message = "Description cannot be nu
                                     UUID accountId,
                                     @NotNull(message = "CategoryId cannot be null")
                                     UUID categoryId,
+                                    @NotNull(message = "TagIds cannot be null")
                                     Set<UUID> tagIds,
                                     @NotNull(message = "Amount cannot be null")
                                     BigDecimal amount,
