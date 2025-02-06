@@ -38,7 +38,12 @@ public class CreateTransactionImpl implements CreateTransaction {
                 .orElseThrow(() -> new NotFoundException(String.format("Account with id %s not found", dto.accountId())));
         Category category = categoryRepository.findByIdAndUser(dto.categoryId(), user)
                 .orElseThrow(() -> new NotFoundException(String.format("Category with id %s not found", dto.categoryId())));
-        Set<Tag> tags = tagRepository.findAllByIdInAndUser(dto.tagsIds(), user);
+        Set<Tag> tags = tagRepository.findAllByIdInAndUser(dto.tagIds(), user);
+        dto.tagIds().forEach(tagId -> {
+            if (tags.stream().map(Tag::getId).noneMatch(tagId::equals)) {
+                throw new NotFoundException(String.format("Tag with id %s not found", tagId));
+            }
+        });
         Transaction transaction = mapper.toModel(dto, account, category, tags);
         repository.save(transaction);
     }
