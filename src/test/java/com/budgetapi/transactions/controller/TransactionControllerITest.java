@@ -8,6 +8,7 @@ import com.budgetapi.category.repository.CategoryRepository;
 import com.budgetapi.factories.AccountFactory;
 import com.budgetapi.factories.CategoryFactory;
 import com.budgetapi.factories.TagFactory;
+import com.budgetapi.factories.TransactionFactory;
 import com.budgetapi.factories.UserFactory;
 import com.budgetapi.tag.model.Tag;
 import com.budgetapi.tag.repository.TagRepository;
@@ -31,10 +32,14 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.byLessThan;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -99,5 +104,31 @@ class TransactionControllerITest {
         assertThat(transaction.getStatus()).isEqualTo(payload.status());
         assertThat(transaction.getCreateDate()).isNotNull();
         assertThat(transaction.getModifiedDate()).isNull();
+    }
+
+    @Test
+    @DisplayName("PUT /transactions/{id} returns 200")
+    void put_createsAndReturns200_whenPayloadIsValid() throws Exception {
+        Transaction transaction = transactionRepository.save(TransactionFactory.create(account, category));
+        TransactionRequestDTO payload = new TransactionRequestDTO("updateddescription", account.getId(), category.getId(), Set.of(tag.getId()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
+
+        this.mockMvc.perform(put(TransactionController.BASE_URL + "/" + transaction.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk());
+
+        Optional<Transaction> transactionOptional = transactionRepository.findByIdFetchTags(transaction.getId());
+        assertThat(transactionOptional).isPresent();
+        Transaction updatedTransaction = transactionOptional.get();
+        assertThat(updatedTransaction.getDescription()).isEqualTo(payload.description());
+        assertThat(updatedTransaction.getAccount().getId()).isEqualTo(payload.accountId());
+        assertThat(updatedTransaction.getCategory().getId()).isEqualTo(payload.categoryId());
+        assertThat(updatedTransaction.getTags()).hasSize(1);
+        assertThat(updatedTransaction.getTags().iterator().next().getId()).isEqualTo(tag.getId());
+        assertThat(updatedTransaction.getAmount()).isEqualByComparingTo(payload.amount());
+        assertThat(updatedTransaction.getDate()).isEqualTo(payload.date());
+        assertThat(updatedTransaction.getStatus()).isEqualTo(payload.status());
+        assertThat(updatedTransaction.getCreateDate()).isCloseTo(transaction.getCreateDate(), byLessThan(1, ChronoUnit.MICROS));
+        assertThat(updatedTransaction.getModifiedDate()).isNotNull();
     }
 }

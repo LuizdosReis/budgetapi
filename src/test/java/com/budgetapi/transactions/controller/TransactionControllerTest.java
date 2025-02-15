@@ -5,6 +5,7 @@ import com.budgetapi.transaction.controller.TransactionController;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
 import com.budgetapi.transaction.model.TransactionStatus;
 import com.budgetapi.transaction.services.CreateTransaction;
+import com.budgetapi.transaction.services.UpdateTransaction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -46,6 +48,9 @@ class TransactionControllerTest extends AbstractControllerTest {
 
     @MockitoBean
     private CreateTransaction createTransaction;
+
+    @MockitoBean
+    private UpdateTransaction updateTransaction;
 
     @Test
     @DisplayName("POST /transactions returns 201 and calls save when payload is valid")
@@ -96,6 +101,53 @@ class TransactionControllerTest extends AbstractControllerTest {
     @DisplayName("POST /transactions do not calls save and returns 400 when payload is empty")
     void post_doNotSaveAndReturns400_whenPayloadIsEmpty() throws Exception {
         this.mockMvc.perform(post(TransactionController.BASE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("Field Validation Errors")))
+                .andExpect(jsonPath("$.timestamp", notNullValue()))
+                .andExpect(jsonPath("$.fieldErrors[*].field", containsInAnyOrder("description", "accountId", "categoryId", "tagIds", "amount", "date", "status")))
+                .andExpect(jsonPath("$.fieldErrors[*].message", containsInAnyOrder("Description cannot be null", "AccountId cannot be null", "CategoryId cannot be null", "TagIds cannot be null", "Amount cannot be null", "Date cannot be null", "Status cannot be null")))
+                .andExpect(jsonPath("$.fieldErrors[*].rejectedValue", contains(null, null, null, null, null, null, null)));
+
+        verifyNoInteractions(createTransaction);
+    }
+
+    @Test
+    @DisplayName("PUT /transactions/{id} returns 201 and calls save when payload is valid")
+    void put_createsAndReturns201_whenPayloadIsValid() throws Exception {
+        UUID id = UUID.randomUUID();
+        TransactionRequestDTO payload = new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
+
+        this.mockMvc.perform(put(TransactionController.BASE_URL + "/" + id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk());
+
+        verify(updateTransaction, times(1)).execute(id, payload);
+    }
+
+    @ParameterizedTest
+    @DisplayName("PUT /transactions/{id} return 400 bad request and do not calls save when payload is invalid")
+    @MethodSource("invalidTransactionsRequestDTOs")
+    void put_doNotSaveAndReturns400_whenPayloadIsInvalid(TransactionRequestDTO payload, String fieldErrorMessage, String field, Object value) throws Exception {
+        this.mockMvc.perform(put(TransactionController.BASE_URL + "/" + UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("Field Validation Errors")))
+                .andExpect(jsonPath("$.timestamp", notNullValue()))
+                .andExpect(jsonPath("$.fieldErrors[*].field", contains(field)))
+                .andExpect(jsonPath("$.fieldErrors[*].message", contains(fieldErrorMessage)))
+                .andExpect(jsonPath("$.fieldErrors[*].rejectedValue", contains(value)));
+
+        verifyNoInteractions(updateTransaction);
+    }
+
+    @Test
+    @DisplayName("PUT /transactions/{id} do not calls save and returns 400 when payload is empty")
+    void put_doNotSaveAndReturns400_whenPayloadIsEmpty() throws Exception {
+        this.mockMvc.perform(put(TransactionController.BASE_URL + "/" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest())

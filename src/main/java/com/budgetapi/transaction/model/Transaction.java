@@ -84,27 +84,56 @@ public class Transaction extends AbstractAuditable implements Serializable {
     private boolean deleted = Boolean.FALSE;
 
     @Builder
-    public Transaction(String description, Account account, Category category, Set<Tag> tags, BigDecimal amount, LocalDate date, TransactionStatus status, boolean deleted) {
-        Assert.notNull(account, "Account must not be null");
-        Assert.notNull(category, "Category must not be null");
-        Assert.notNull(amount, "Amount must not be null");
-        Assert.notNull(date, "Date must not be null");
-        Assert.notNull(status, "Status must not be null");
-        Assert.notNull(tags, "Tags must not be null");
-        Assert.isTrue(account.getUser().equals(category.getUser()), "Account user is not the same as category user");
-        Assert.isTrue(tags.stream().allMatch(tag -> tag.getUser().equals(account.getUser())), "Tags user is not the same as account user");
+    private Transaction(UUID id, String description, Account account, Category category, Set<Tag> tags, BigDecimal amount, LocalDate date, TransactionStatus status, boolean deleted) {
+        this.id = id;
         this.description = new Description(description);
-        this.account = account;
-        this.category = category;
-        this.tags = tags;
-        this.amount = amount;
-        this.date = date;
-        this.status = status;
+        this.setAccount(account);
+        this.setCategory(category);
+        this.setTags(tags);
+        this.setAmount(amount);
+        this.setDate(date);
+        this.setStatus(status);
         this.deleted = deleted;
+    }
+
+    public void setTags(Set<Tag> tags) {
+        Assert.notNull(tags, "Tags must not be null");
+        Assert.isTrue(tags.stream().allMatch(tag -> tag.getUser().getId().equals(account.getUser().getId())), "Tags user is not the same as account user");
+        this.tags = new HashSet<>(tags);
+    }
+
+    public Set<Tag> getTags() {
+        return Set.copyOf(this.tags);
     }
 
     public void setDescription(String description) {
         this.description = new Description(description);
+    }
+
+    public void setAmount(BigDecimal amount) {
+        Assert.notNull(amount, "Amount must not be null");
+        this.amount = amount;
+    }
+
+    public void setAccount(Account account) {
+        Assert.notNull(account, "Account must not be null");
+        this.account = account;
+    }
+
+    public void setDate(LocalDate date) {
+        Assert.notNull(date, "Date must not be null");
+        this.date = date;
+    }
+
+    public void setStatus(TransactionStatus status) {
+        Assert.notNull(status, "Status must not be null");
+        this.status = status;
+    }
+
+    public void setCategory(Category category) {
+        Assert.notNull(category, "Category must not be null");
+        Assert.isTrue(account.getUser().getId().equals(category.getUser().getId()), "Account user is not the same as category user");
+        this.category = category;
     }
 
     public String getDescription() {

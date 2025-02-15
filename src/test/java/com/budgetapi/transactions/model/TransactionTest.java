@@ -34,7 +34,15 @@ class TransactionTest {
     @Test
     @DisplayName("Create Transaction")
     void createTransaction() {
-        Transaction transaction = new Transaction(description, account, category, tags, amount, date, status, Boolean.FALSE);
+        Transaction transaction = Transaction.builder()
+                .description(description)
+                .account(account)
+                .category(category)
+                .amount(amount)
+                .date(date)
+                .status(status)
+                .tags(tags)
+                .build();
         assertThat(transaction.getDescription()).isEqualTo(description);
         assertThat(transaction.getAccount()).isEqualTo(account);
         assertThat(transaction.getCategory()).isEqualTo(category);
@@ -48,49 +56,98 @@ class TransactionTest {
     @Test
     @DisplayName("Do not create transaction with null description")
     void doNotCreateTransactionWithNullDescription() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new Transaction(null, account, category, tags, amount, date, status, Boolean.FALSE));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> Transaction.builder()
+                .account(account)
+                .category(category)
+                .amount(amount)
+                .date(date)
+                .status(status)
+                .tags(tags)
+                .build());
         assertThat(exception.getMessage()).contains("Description must have text");
     }
 
     @Test
     @DisplayName("Do not create transaction with null account")
     void doNotCreateTransactionWithNullAccount() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new Transaction(description, null, category, tags, amount, date, status, Boolean.FALSE));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> Transaction.builder()
+                .description(description)
+                .category(category)
+                .amount(amount)
+                .date(date)
+                .status(status)
+                .tags(tags)
+                .build());
         assertThat(exception.getMessage()).contains("Account must not be null");
     }
 
     @Test
     @DisplayName("Do not create transaction with null category")
     void doNotCreateTransactionWithNullCategory() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new Transaction(description, account, null, tags, amount, date, status, Boolean.FALSE));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> Transaction.builder()
+                .description(description)
+                .account(account)
+                .amount(amount)
+                .date(date)
+                .status(status)
+                .tags(tags)
+                .build());
         assertThat(exception.getMessage()).contains("Category must not be null");
     }
 
     @Test
     @DisplayName("Do not create transaction with null tags")
     void doNotCreateTransactionWithNullTags() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new Transaction(description, account, category, null, amount, date, status, Boolean.FALSE));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> Transaction.builder()
+                .description(description)
+                .account(account)
+                .category(category)
+                .amount(amount)
+                .date(date)
+                .status(status)
+                .build());
         assertThat(exception.getMessage()).contains("Tags must not be null");
     }
 
     @Test
     @DisplayName("Do not create transaction with null amount")
     void doNotCreateTransactionWithNullAmount() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new Transaction(description, account, category, tags, null, date, status, Boolean.FALSE));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> Transaction.builder()
+                .description(description)
+                .account(account)
+                .category(category)
+                .date(date)
+                .status(status)
+                .tags(tags)
+                .build());
         assertThat(exception.getMessage()).contains("Amount must not be null");
     }
 
     @Test
     @DisplayName("Do not create transaction with null date")
     void doNotCreateTransactionWithNullDate() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new Transaction(description, account, category, tags, amount, null, status, Boolean.FALSE));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> Transaction.builder()
+                .description(description)
+                .account(account)
+                .category(category)
+                .amount(amount)
+                .status(status)
+                .tags(tags)
+                .build());
         assertThat(exception.getMessage()).contains("Date must not be null");
     }
 
     @Test
     @DisplayName("Do not create transaction with null status")
     void doNotCreateTransactionWithNullStatus() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new Transaction(description, account, category, tags, amount, date, null, Boolean.FALSE));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> Transaction.builder()
+                .description(description)
+                .account(account)
+                .category(category)
+                .amount(amount)
+                .date(date)
+                .tags(tags)
+                .build());
         assertThat(exception.getMessage()).contains("Status must not be null");
     }
 
@@ -99,7 +156,15 @@ class TransactionTest {
     void doNotCreateTransactionWithCategoryFromOtherUser() {
         User otherUser = UserFactory.createUser();
         Category otherUserCategory = CategoryFactory.create(otherUser);
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new Transaction(description, account, otherUserCategory, tags, amount, date, status, Boolean.FALSE));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> Transaction.builder()
+                .description(description)
+                .account(account)
+                .category(otherUserCategory)
+                .amount(amount)
+                .date(date)
+                .status(status)
+                .tags(tags)
+                .build());
         assertThat(exception.getMessage()).contains("Account user is not the same as category user");
     }
 
@@ -110,14 +175,30 @@ class TransactionTest {
         Tag otherUserTag = TagFactory.create(otherUser);
         Tag tag = TagFactory.create(user);
         Set<Tag> otherUserTags = Set.of(tag, otherUserTag);
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new Transaction(description, account, category, otherUserTags, amount, date, status, Boolean.FALSE));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> Transaction.builder()
+                .description(description)
+                .account(account)
+                .category(category)
+                .amount(amount)
+                .date(date)
+                .status(status)
+                .tags(otherUserTags)
+                .build());
         assertThat(exception.getMessage()).contains("Tags user is not the same as account user");
     }
 
     @Test
     @DisplayName("Create transaction with empty tags")
     void createTransactionWithEmptyTags() {
-        Transaction transaction = new Transaction(description, account, category, Set.of(), amount, date, status, Boolean.FALSE);
+        Transaction transaction = Transaction.builder()
+                .description(description)
+                .account(account)
+                .category(category)
+                .amount(amount)
+                .date(date)
+                .tags(Set.of())
+                .status(status)
+                .build();
         assertThat(transaction).isNotNull();
     }
 }

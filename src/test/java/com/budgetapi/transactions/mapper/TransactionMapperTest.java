@@ -5,6 +5,7 @@ import com.budgetapi.category.model.Category;
 import com.budgetapi.factories.AccountFactory;
 import com.budgetapi.factories.CategoryFactory;
 import com.budgetapi.factories.TagFactory;
+import com.budgetapi.factories.TransactionFactory;
 import com.budgetapi.factories.UserFactory;
 import com.budgetapi.tag.model.Tag;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.Set;
 import java.util.UUID;
 
@@ -44,6 +46,33 @@ class TransactionMapperTest {
         assertThat(transaction.getTags()).isEqualTo(Set.of(tag));
         assertThat(transaction.getStatus()).isEqualTo(dto.status());
         assertThat(transaction.getId()).isNull();
+        assertThat(transaction.isDeleted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("updateModel should update with correct fields")
+    void updateModel_shouldUpdateWithCorrectFields() {
+        User user = UserFactory.createUser();
+        Account account = AccountFactory.createAccount(user);
+        Category category = CategoryFactory.create(user);
+        Tag tag = TagFactory.create(user);
+        TransactionRequestDTO dto = new TransactionRequestDTO("transaction", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.of(2022, Month.DECEMBER, 12), TransactionStatus.SCHEDULED);
+        UUID transactionId = UUID.randomUUID();
+        Transaction transaction = TransactionFactory.create(account, category, c -> c.id(transactionId));
+
+        Account newAccount = AccountFactory.createAccount(user);
+        Category newCategory = CategoryFactory.create(user);
+
+        TransactionMapper.MAPPER.updateModel(dto, newAccount, newCategory, Set.of(tag), transaction);
+
+        assertThat(transaction.getDescription()).isEqualTo(dto.description());
+        assertThat(transaction.getAmount()).isEqualTo(dto.amount());
+        assertThat(transaction.getDate()).isEqualTo(dto.date());
+        assertThat(transaction.getAccount()).isEqualTo(newAccount);
+        assertThat(transaction.getCategory()).isEqualTo(newCategory);
+        assertThat(transaction.getTags()).isEqualTo(Set.of(tag));
+        assertThat(transaction.getStatus()).isEqualTo(dto.status());
+        assertThat(transaction.getId()).isEqualTo(transactionId);
         assertThat(transaction.isDeleted()).isFalse();
     }
 }
