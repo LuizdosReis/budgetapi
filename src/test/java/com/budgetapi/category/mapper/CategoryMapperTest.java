@@ -21,7 +21,7 @@ class CategoryMapperTest {
 
     @BeforeEach
     void setUp() {
-        user = UserFactory.createUser(builder -> builder.id(UUID.randomUUID()));
+        user = UserFactory.createUser();
     }
 
     @Test

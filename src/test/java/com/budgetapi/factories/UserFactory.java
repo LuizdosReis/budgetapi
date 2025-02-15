@@ -20,6 +20,6 @@ public class UserFactory {
     }
 
     public static User createUser() {
-        return createUser(builder -> builder.username("user" + Math.random()));
+        return createUser(builder -> builder.username("user"));
     }
 }

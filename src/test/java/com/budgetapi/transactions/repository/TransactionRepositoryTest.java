@@ -102,7 +102,7 @@ class TransactionRepositoryTest {
     @Test
     @DisplayName("findByIdAndAccountUser should return empty when transaction belongs to other user")
     void findByIdAndUser_shouldReturnEmptyWhenTransactionBelongsToOtherUser() {
-        User otherUser = entityManager.persist(UserFactory.createUser());
+        User otherUser = entityManager.persist(UserFactory.createUser(c -> c.username("otherUser")));
         Account otherUserAccount = entityManager.persist(AccountFactory.createAccount(otherUser));
         Category otherUserCategory = entityManager.persist(CategoryFactory.create(otherUser));
         Transaction otherUsertransaction = entityManager.persist(TransactionFactory.create(otherUserAccount, otherUserCategory));
@@ -114,7 +114,7 @@ class TransactionRepositoryTest {
     @Test
     @DisplayName("findByIdAndAccountUser should return empty when other user tries to access transaction")
     void findByIdAndAccountUser_shouldReturnEmptyWhenOtherUserTriesToAccessCategory() {
-        User otherUser = entityManager.persist(UserFactory.createUser());
+        User otherUser = entityManager.persist(UserFactory.createUser(c -> c.username("otherUser")));
 
         Optional<Transaction> transactionOptional = repository.findByIdAndAccountUser(transaction.getId(), otherUser);
         assertThat(transactionOptional).isEmpty();
