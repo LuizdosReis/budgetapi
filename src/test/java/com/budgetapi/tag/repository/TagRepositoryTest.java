@@ -1,5 +1,6 @@
 package com.budgetapi.tag.repository;
 
+import com.budgetapi.EnableTestcontainers;
 import com.budgetapi.auditing.AuditingConfig;
 import com.budgetapi.factories.TagFactory;
 import com.budgetapi.factories.UserFactory;
@@ -28,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import(AuditingConfig.class)
+@EnableTestcontainers
 class TagRepositoryTest {
 
     @Autowired

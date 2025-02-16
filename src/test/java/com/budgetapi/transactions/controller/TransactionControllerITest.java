@@ -1,6 +1,7 @@
 package com.budgetapi.transactions.controller;
 
 import com.budgetapi.ClearDatabase;
+import com.budgetapi.EnableTestcontainers;
 import com.budgetapi.account.model.Account;
 import com.budgetapi.account.repository.AccountRepository;
 import com.budgetapi.category.model.Category;
@@ -46,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @WithMockUser
 @ClearDatabase
+@EnableTestcontainers
 class TransactionControllerITest {
 
     @Autowired

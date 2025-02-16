@@ -1,5 +1,6 @@
 package com.budgetapi.transactions.repository;
 
+import com.budgetapi.EnableTestcontainers;
 import com.budgetapi.account.model.Account;
 import com.budgetapi.auditing.AuditingConfig;
 import com.budgetapi.category.model.Category;
@@ -32,6 +33,7 @@ import static org.assertj.core.api.Assertions.byLessThan;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import(AuditingConfig.class)
+@EnableTestcontainers
 class TransactionRepositoryTest {
 
     @Autowired

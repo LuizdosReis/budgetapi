@@ -1,5 +1,6 @@
 package com.budgetapi.config;
 
+import com.budgetapi.EnableTestcontainers;
 import com.budgetapi.factories.UserFactory;
 import com.budgetapi.user.model.User;
 import com.budgetapi.user.repository.UserRepository;
@@ -21,6 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@EnableTestcontainers
 class CustomUsernamePasswordAuthenticationFilterTest {
 
     private static final String URL = "/login";
