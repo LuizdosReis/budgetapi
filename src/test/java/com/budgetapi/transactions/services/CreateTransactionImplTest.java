@@ -42,7 +42,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class CreateTransactionsImplTest {
+class CreateTransactionImplTest {
 
     @InjectMocks
     private CreateTransactionImpl createTransaction;
