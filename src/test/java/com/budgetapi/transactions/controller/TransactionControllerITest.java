@@ -39,6 +39,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.byLessThan;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -132,5 +133,18 @@ class TransactionControllerITest {
         assertThat(updatedTransaction.getStatus()).isEqualTo(payload.status());
         assertThat(updatedTransaction.getCreateDate()).isCloseTo(transaction.getCreateDate(), byLessThan(1, ChronoUnit.MICROS));
         assertThat(updatedTransaction.getModifiedDate()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("DELETE /transactions/{id} returns 204")
+    void delete_deletesAndReturns204_whenTransactionExists() throws Exception {
+        Transaction transaction = transactionRepository.save(TransactionFactory.create(account, category));
+
+        this.mockMvc.perform(delete(TransactionController.BASE_URL + "/" + transaction.getId()))
+                .andExpect(status().isNoContent());
+
+        Optional<Transaction> transactionOptional = transactionRepository.findById(transaction.getId());
+        assertThat(transactionOptional).isPresent();
+        assertThat(transactionOptional.get().isDeleted()).isTrue();
     }
 }

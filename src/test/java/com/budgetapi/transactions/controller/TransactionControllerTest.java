@@ -1,10 +1,12 @@
 package com.budgetapi.transactions.controller;
 
 import com.budgetapi.AbstractControllerTest;
+import com.budgetapi.erro.NotFoundException;
 import com.budgetapi.transaction.controller.TransactionController;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
 import com.budgetapi.transaction.model.TransactionStatus;
 import com.budgetapi.transaction.services.CreateTransaction;
+import com.budgetapi.transaction.services.DeleteTransaction;
 import com.budgetapi.transaction.services.UpdateTransaction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -28,9 +30,11 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -51,6 +55,9 @@ class TransactionControllerTest extends AbstractControllerTest {
 
     @MockitoBean
     private UpdateTransaction updateTransaction;
+
+    @MockitoBean
+    private DeleteTransaction deleteTransaction;
 
     @Test
     @DisplayName("POST /transactions returns 201 and calls save when payload is valid")
@@ -158,5 +165,28 @@ class TransactionControllerTest extends AbstractControllerTest {
                 .andExpect(jsonPath("$.fieldErrors[*].rejectedValue", contains(null, null, null, null, null, null, null)));
 
         verifyNoInteractions(createTransaction);
+    }
+
+    @Test
+    @DisplayName("DELETE /transactions/{id} returns 204 and calls delete")
+    void delete_returns204() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        this.mockMvc.perform(delete(TransactionController.BASE_URL + "/" + id))
+                .andExpect(status().isNoContent());
+
+        verify(deleteTransaction, times(1)).execute(id);
+    }
+
+    @Test
+    @DisplayName("DELETE /transaction/{id} returns 404 not found when service throws notFoundException")
+    void delete_returns404_whenServiceThrowsNotFoundException() throws Exception {
+        UUID id = UUID.randomUUID();
+        doThrow(new NotFoundException(String.format("Transaction with id %s not found", id))).when(deleteTransaction).execute(id);
+
+        this.mockMvc.perform(delete(TransactionController.BASE_URL + "/" + id))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message", is(String.format("Transaction with id %s not found", id))))
+                .andExpect(jsonPath("$.timestamp", notNullValue()));
     }
 }
