@@ -36,13 +36,15 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class UpdateTransactionsImplTest {
+class UpdateTransactionImplTest {
 
     @InjectMocks
     private UpdateTransactionImpl updateTransaction;
@@ -130,7 +132,7 @@ class UpdateTransactionsImplTest {
     }
 
     @Test
-    @DisplayName("execute should throw NotFoundException when tag is not found ")
+    @DisplayName("execute should throw NotFoundException when tag is not found")
     void execute_shouldThrowNotFoundException_whenTagIsNotFound() {
         UUID notFoundTagId = UUID.randomUUID();
         Set<UUID> notFoundTagIds = Set.of(notFoundTagId, tagId);
@@ -145,5 +147,21 @@ class UpdateTransactionsImplTest {
         NotFoundException exception = assertThrows(NotFoundException.class, () -> updateTransaction.execute(transactionId, dto));
         assertThat(exception.getMessage()).contains(String.format("Tag with id %s not found", notFoundTagId));
         verifyNoInteractions(repository);
+    }
+
+    @Test
+    @DisplayName("execute should throw NotFoundException when transaction is not found ")
+    void execute_shouldThrowNotFoundException_whenTransactionIsNotFound() {
+        TransactionRequestDTO dto = new TransactionRequestDTO("description", accountId, categoryId, tagIds, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
+        UUID transactionId = UUID.randomUUID();
+
+        when(accountRepository.findByIdAndUser(accountId, user)).thenReturn(Optional.of(account));
+        when(categoryRepository.findByIdAndUser(categoryId, user)).thenReturn(Optional.of(category));
+        when(tagRepository.findAllByIdInAndUser(tagIds, user)).thenReturn(tags);
+        when(repository.findByIdAndAccountUser(transactionId, user)).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> updateTransaction.execute(transactionId, dto));
+        assertThat(exception.getMessage()).contains(String.format("Transaction with id %s not found", transactionId));
+        verify(repository, never()).save(any());
     }
 }
