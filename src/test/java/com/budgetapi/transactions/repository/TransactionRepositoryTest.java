@@ -6,14 +6,19 @@ import com.budgetapi.auditing.AuditingConfig;
 import com.budgetapi.category.model.Category;
 import com.budgetapi.factories.AccountFactory;
 import com.budgetapi.factories.CategoryFactory;
+import com.budgetapi.factories.TagFactory;
 import com.budgetapi.factories.TransactionFactory;
 import com.budgetapi.factories.UserFactory;
+import com.budgetapi.tag.model.Tag;
 import com.budgetapi.transaction.model.Transaction;
 import com.budgetapi.transaction.repository.TransactionRepository;
+import com.budgetapi.transaction.specification.TransactionSpecification;
 import com.budgetapi.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -22,10 +27,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.byLessThan;
@@ -50,9 +58,9 @@ class TransactionRepositoryTest {
     @BeforeEach
     void setUp() {
         user = entityManager.persist(UserFactory.createUser());
-        transaction = createTransaction(user);
-        transaction2 = createTransaction(user);
-        transaction3 = createDeletedTransaction(user);
+        transaction = createTransaction(user, c -> c.description("Transaction").amount(BigDecimal.valueOf(5.50)));
+        transaction2 = createTransaction(user, c -> c.description("transaction2"));
+        transaction3 = createDeletedTransaction(user, c -> c.description("transaction3"));
         entityManager.flush();
     }
 
@@ -133,60 +141,134 @@ class TransactionRepositoryTest {
     }
 
     @Test
-    @DisplayName("findByAccountUser should return all transactions")
-    void findByAccountUser_shouldReturnAllTransactions() {
-        Page<Transaction> transactions = repository.findByAccountUser(user, Pageable.unpaged());
+    @DisplayName("findAll by description should return transactions with exact description match")
+    void findAllByDescription_shouldReturnTransactionsWithExactDescriptionMatch() {
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.descriptionContains("transaction2"), Pageable.unpaged());
+        assertThat(transactions)
+                .containsExactly(transaction2);
+    }
+
+    @Test
+    @DisplayName("findAll by description should return transactions with description containing substring 'trans'")
+    void findAllByDescription_shouldReturnTransactionsWithDescriptionContainingTransSubstring() {
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.descriptionContains("trans"), Pageable.unpaged());
+        assertThat(transactions)
+                .containsExactly(transaction, transaction2, transaction3);
+    }
+
+    @Test
+    @DisplayName("findAll by description should return transactions with description containing substring 'action3'")
+    void findAllByDescription_shouldReturnTransactionsWithDescriptionContainingAction3Substring() {
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.descriptionContains("action3"), Pageable.unpaged());
+        assertThat(transactions)
+                .containsExactly(transaction3);
+    }
+
+    @Test
+    @DisplayName("findAll by user should return transactions from user")
+    void findAllByUser_shouldReturnTransactionsFromUser() {
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.userEquals(user), Pageable.unpaged());
         assertThat(transactions)
                 .hasSize(3)
                 .containsExactlyInAnyOrder(transaction, transaction2, transaction3);
     }
 
     @Test
-    @DisplayName("findByAccountUserAndDeletedFalse should not return deleted transactions")
-    void findByAccountUserAndDeletedFalse_shouldReturnNotDeletedTransactions() {
-        Page<Transaction> transactions = repository.findByAccountUserAndDeletedFalse(user, Pageable.unpaged());
+    @DisplayName("findAll by user should return transactions from other user")
+    void findAllByUser_shouldNotReturnTransactionsFromOtherUser() {
+        User otherUser = entityManager.persist(UserFactory.createUser(c -> c.username("otherUser")));
+        createTransaction(otherUser);
+
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.userEquals(user), Pageable.unpaged());
+        assertThat(transactions)
+                .containsExactly(transaction, transaction2, transaction3);
+    }
+
+    @Test
+    @DisplayName("findAll isActive should not return active transactions")
+    void findAllIsActive_shouldReturnActiveTransactions() {
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.isActive(), Pageable.unpaged());
         assertThat(transactions)
                 .hasSize(2)
                 .containsExactlyInAnyOrder(transaction, transaction2);
     }
 
     @Test
-    @DisplayName("findByAccountUser should not return transactions from other user")
-    void findByAccountUser_shouldNotReturnCategoriesFromOtherUser() {
-        User otherUser = entityManager.persist(UserFactory.createUser(builder -> builder.username("otherUser")));
-        createTransaction(otherUser);
-
-        Page<Transaction> transactions = repository.findByAccountUser(user, Pageable.unpaged());
+    @DisplayName("findAll should return all transactions including deleted")
+    void findAll_shouldReturnAllTransactionsIncludingDeleted() {
+        Page<Transaction> transactions = repository.findAll(null, Pageable.unpaged());
         assertThat(transactions)
                 .hasSize(3)
                 .containsExactlyInAnyOrder(transaction, transaction2, transaction3);
     }
 
-    @Test
-    @DisplayName("findByAccountUserAndDeletedFalse should not return transactions from other user")
-    void findByAccountUserAndDeletedFalse_shouldNotReturnTransactionsFromOtherUser() {
-        User otherUser = entityManager.persist(UserFactory.createUser(builder -> builder.username("otherUser")));
-        createTransaction(otherUser);
-
-        Page<Transaction> transactions = repository.findByAccountUserAndDeletedFalse(user, Pageable.unpaged());
+    @ParameterizedTest
+    @DisplayName("findAll by amount should return transactions with amount containing the substring")
+    @ValueSource(strings = {"5.50", "5", "50"})
+    void findAllByAmount_shouldReturnTransactionsWithAmountContainingSubstring(String substring) {
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.amountContains(substring), Pageable.unpaged());
         assertThat(transactions)
-                .hasSize(2)
-                .containsExactlyInAnyOrder(transaction, transaction2);
+                .containsExactly(transaction);
     }
+
+    @ParameterizedTest
+    @DisplayName("findAll by category name should return transactions with category name containing the substring")
+    @ValueSource(strings = {"Expense", "Exp", "pen", "nse"})
+    void findAllByCategoryName_shouldReturnTransactionsWithCategoryNameContainingSubstring(String substring) {
+        Category category = CategoryFactory.create(user, c -> c.name("Expense"));
+        entityManager.persist(category);
+        Transaction expenseTransaction = createTransaction(user, c -> c.category(category));
+
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.categoryNameContains(substring), Pageable.unpaged());
+        assertThat(transactions)
+                .containsExactly(expenseTransaction);
+    }
+
+    @ParameterizedTest
+    @DisplayName("findAll by account name should return transactions with account name containing the substring")
+    @ValueSource(strings = {"ActiveBank", "iveBa", "Act", "eBank"})
+    void findAllByAccountName_shouldReturnTransactionsWithAccountNameContaining(String substring) {
+        Account account = AccountFactory.createAccount(user, c -> c.name("ActiveBank"));
+        entityManager.persist(account);
+        Transaction nubankTransaction = createTransaction(user, c -> c.account(account));
+
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.accountNameContains(substring), Pageable.unpaged());
+        assertThat(transactions)
+                .containsExactly(nubankTransaction);
+    }
+
+    @ParameterizedTest
+    @DisplayName("findAll by tag name should return transactions with tag name containing the substring")
+    @ValueSource(strings = {"Weekend", "eeke", "wee", "end"})
+    void findAllByTagName_shouldReturnTransactionsWithTagNameContaining(String substring) {
+        Tag tag = TagFactory.create(user, c -> c.name("Weekend"));
+        entityManager.persist(tag);
+        Transaction weekendTransaction = createTransaction(user, c -> c.tags(Set.of(tag)));
+
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.tagNameContains(substring), Pageable.unpaged());
+        assertThat(transactions)
+                .containsExactly(weekendTransaction);
+    }
+
 
     private Transaction createTransaction(User user) {
-        Account account = entityManager.persist(AccountFactory.createAccount(user));
-        Category category = entityManager.persist(CategoryFactory.create(user));
-        entityManager.persist(account);
-        entityManager.persist(category);
-        return entityManager.persist(TransactionFactory.create(account, category));
+        return createTransaction(user, c -> {
+        });
     }
 
-    private Transaction createDeletedTransaction(User user) {
+    private Transaction createTransaction(User user, Consumer<Transaction.TransactionBuilder> customizer) {
         Account account = entityManager.persist(AccountFactory.createAccount(user));
         Category category = entityManager.persist(CategoryFactory.create(user));
         entityManager.persist(account);
         entityManager.persist(category);
-        return entityManager.persist(TransactionFactory.createDeleted(account, category));
+        return entityManager.persist(TransactionFactory.create(account, category, customizer));
+    }
+
+    private Transaction createDeletedTransaction(User user, Consumer<Transaction.TransactionBuilder> customizer) {
+        Account account = entityManager.persist(AccountFactory.createAccount(user));
+        Category category = entityManager.persist(CategoryFactory.create(user));
+        entityManager.persist(account);
+        entityManager.persist(category);
+        return entityManager.persist(TransactionFactory.createDeleted(account, category, customizer));
     }
 }

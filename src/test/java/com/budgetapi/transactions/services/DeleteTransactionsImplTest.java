@@ -75,6 +75,6 @@ class DeleteTransactionsImplTest {
         NotFoundException exception = assertThrows(NotFoundException.class, () -> deleteTransaction.execute(id));
 
         assertThat(exception.getMessage()).contains(String.format("Transaction with id %s not found", id));
-        verify(repository, never()).delete(any());
+        verify(repository, never()).delete(any(Transaction.class));
     }
 }
