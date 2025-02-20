@@ -45,7 +45,6 @@ class TransactionMapperTest {
         assertThat(transaction.getCategory()).isEqualTo(category);
         assertThat(transaction.getTags()).isEqualTo(Set.of(tag));
         assertThat(transaction.getStatus()).isEqualTo(dto.status());
-        assertThat(transaction.getId()).isNull();
         assertThat(transaction.isDeleted()).isFalse();
     }
 
@@ -57,8 +56,7 @@ class TransactionMapperTest {
         Category category = CategoryFactory.create(user);
         Tag tag = TagFactory.create(user);
         TransactionRequestDTO dto = new TransactionRequestDTO("transaction", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.of(2022, Month.DECEMBER, 12), TransactionStatus.SCHEDULED);
-        UUID transactionId = UUID.randomUUID();
-        Transaction transaction = TransactionFactory.create(account, category, c -> c.id(transactionId));
+        Transaction transaction = TransactionFactory.create(account, category);
 
         Account newAccount = AccountFactory.createAccount(user);
         Category newCategory = CategoryFactory.create(user);
@@ -72,7 +70,6 @@ class TransactionMapperTest {
         assertThat(transaction.getCategory()).isEqualTo(newCategory);
         assertThat(transaction.getTags()).isEqualTo(Set.of(tag));
         assertThat(transaction.getStatus()).isEqualTo(dto.status());
-        assertThat(transaction.getId()).isEqualTo(transactionId);
         assertThat(transaction.isDeleted()).isFalse();
     }
 }

@@ -115,7 +115,7 @@ class TransactionControllerITest {
         Transaction transaction = transactionRepository.save(TransactionFactory.create(account, category));
         TransactionRequestDTO payload = new TransactionRequestDTO("updateddescription", account.getId(), category.getId(), Set.of(tag.getId()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
 
-        this.mockMvc.perform(put(TransactionController.BASE_URL + "/" + transaction.getId())
+        this.mockMvc.perform(put(TransactionController.BASE_URL + "/" + transaction.getId().id())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isOk());
@@ -140,7 +140,7 @@ class TransactionControllerITest {
     void delete_deletesAndReturns204_whenTransactionExists() throws Exception {
         Transaction transaction = transactionRepository.save(TransactionFactory.create(account, category));
 
-        this.mockMvc.perform(delete(TransactionController.BASE_URL + "/" + transaction.getId()))
+        this.mockMvc.perform(delete(TransactionController.BASE_URL + "/" + transaction.getId().id()))
                 .andExpect(status().isNoContent());
 
         Optional<Transaction> transactionOptional = transactionRepository.findById(transaction.getId());

@@ -18,7 +18,6 @@ public interface TransactionMapper {
 
     TransactionMapper MAPPER = Mappers.getMapper(TransactionMapper.class);
 
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "account", source = "account")
     @Mapping(target = "deleted", ignore = true)
     Transaction toModel(TransactionRequestDTO dto, Account account, Category category, Set<Tag> tags);

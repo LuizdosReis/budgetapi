@@ -1,9 +1,8 @@
 package com.budgetapi.transaction.services;
 
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
-
-import java.util.UUID;
+import com.budgetapi.transaction.model.TransactionId;
 
 public interface UpdateTransaction {
-    void execute(UUID transactionId, TransactionRequestDTO dto);
+    void execute(TransactionId transactionId, TransactionRequestDTO dto);
 }

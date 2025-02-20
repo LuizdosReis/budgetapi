@@ -4,6 +4,7 @@ import com.budgetapi.AbstractControllerTest;
 import com.budgetapi.erro.NotFoundException;
 import com.budgetapi.transaction.controller.TransactionController;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
+import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.model.TransactionStatus;
 import com.budgetapi.transaction.services.CreateTransaction;
 import com.budgetapi.transaction.services.DeleteTransaction;
@@ -123,15 +124,15 @@ class TransactionControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("PUT /transactions/{id} returns 201 and calls save when payload is valid")
     void put_createsAndReturns201_whenPayloadIsValid() throws Exception {
-        UUID id = UUID.randomUUID();
+        TransactionId transactionId = new TransactionId();
         TransactionRequestDTO payload = new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
 
-        this.mockMvc.perform(put(TransactionController.BASE_URL + "/" + id)
+        this.mockMvc.perform(put(TransactionController.BASE_URL + "/" + transactionId.id())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isOk());
 
-        verify(updateTransaction, times(1)).execute(id, payload);
+        verify(updateTransaction, times(1)).execute(transactionId, payload);
     }
 
     @ParameterizedTest
@@ -170,23 +171,23 @@ class TransactionControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("DELETE /transactions/{id} returns 204 and calls delete")
     void delete_returns204() throws Exception {
-        UUID id = UUID.randomUUID();
+        TransactionId transactionId = new TransactionId();
 
-        this.mockMvc.perform(delete(TransactionController.BASE_URL + "/" + id))
+        this.mockMvc.perform(delete(TransactionController.BASE_URL + "/" + transactionId.id()))
                 .andExpect(status().isNoContent());
 
-        verify(deleteTransaction, times(1)).execute(id);
+        verify(deleteTransaction, times(1)).execute(transactionId);
     }
 
     @Test
     @DisplayName("DELETE /transaction/{id} returns 404 not found when service throws notFoundException")
     void delete_returns404_whenServiceThrowsNotFoundException() throws Exception {
-        UUID id = UUID.randomUUID();
-        doThrow(new NotFoundException(String.format("Transaction with id %s not found", id))).when(deleteTransaction).execute(id);
+        TransactionId transactionId = new TransactionId();
+        doThrow(new NotFoundException(String.format("Transaction with id %s not found", transactionId.id()))).when(deleteTransaction).execute(transactionId);
 
-        this.mockMvc.perform(delete(TransactionController.BASE_URL + "/" + id))
+        this.mockMvc.perform(delete(TransactionController.BASE_URL + "/" + transactionId.id()))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message", is(String.format("Transaction with id %s not found", id))))
+                .andExpect(jsonPath("$.message", is(String.format("Transaction with id %s not found", transactionId.id()))))
                 .andExpect(jsonPath("$.timestamp", notNullValue()));
     }
 }

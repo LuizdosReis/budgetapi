@@ -15,6 +15,7 @@ import com.budgetapi.tag.repository.TagRepository;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
 import com.budgetapi.transaction.mapper.TransactionMapper;
 import com.budgetapi.transaction.model.Transaction;
+import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.model.TransactionStatus;
 import com.budgetapi.transaction.repository.TransactionRepository;
 import com.budgetapi.transaction.services.UpdateTransactionImpl;
@@ -90,7 +91,7 @@ class UpdateTransactionImplTest {
     @DisplayName("execute should call mapper and repository")
     void execute_shouldCallMapperAndRepository() {
         TransactionRequestDTO dto = new TransactionRequestDTO("description", accountId, categoryId, tagIds, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
-        Transaction transaction = TransactionFactory.create(account, category, c -> c.id(UUID.randomUUID()));
+        Transaction transaction = TransactionFactory.create(account, category);
 
         when(accountRepository.findByIdAndUser(accountId, user)).thenReturn(Optional.of(account));
         when(categoryRepository.findByIdAndUser(categoryId, user)).thenReturn(Optional.of(category));
@@ -110,7 +111,7 @@ class UpdateTransactionImplTest {
 
         when(accountRepository.findByIdAndUser(accountId, user)).thenReturn(Optional.empty());
 
-        UUID transactionId = UUID.randomUUID();
+        TransactionId transactionId = new TransactionId();
         NotFoundException exception = assertThrows(NotFoundException.class, () -> updateTransaction.execute(transactionId, dto));
         assertThat(exception.getMessage()).contains(String.format("Account with id %s not found", accountId));
         verifyNoInteractions(repository);
@@ -125,7 +126,7 @@ class UpdateTransactionImplTest {
         when(accountRepository.findByIdAndUser(accountId, user)).thenReturn(Optional.of(account));
         when(categoryRepository.findByIdAndUser(categoryId, user)).thenReturn(Optional.empty());
 
-        UUID transactionId = UUID.randomUUID();
+        TransactionId transactionId = new TransactionId();
         NotFoundException exception = assertThrows(NotFoundException.class, () -> updateTransaction.execute(transactionId, dto));
         assertThat(exception.getMessage()).contains(String.format("Category with id %s not found", categoryId));
         verifyNoInteractions(repository);
@@ -143,7 +144,7 @@ class UpdateTransactionImplTest {
         when(categoryRepository.findByIdAndUser(categoryId, user)).thenReturn(Optional.of(category));
         when(tagRepository.findAllByIdInAndUser(notFoundTagIds, user)).thenReturn(tags);
 
-        UUID transactionId = UUID.randomUUID();
+        TransactionId transactionId = new TransactionId();
         NotFoundException exception = assertThrows(NotFoundException.class, () -> updateTransaction.execute(transactionId, dto));
         assertThat(exception.getMessage()).contains(String.format("Tag with id %s not found", notFoundTagId));
         verifyNoInteractions(repository);
@@ -153,7 +154,7 @@ class UpdateTransactionImplTest {
     @DisplayName("execute should throw NotFoundException when transaction is not found ")
     void execute_shouldThrowNotFoundException_whenTransactionIsNotFound() {
         TransactionRequestDTO dto = new TransactionRequestDTO("description", accountId, categoryId, tagIds, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
-        UUID transactionId = UUID.randomUUID();
+        TransactionId transactionId = new TransactionId();
 
         when(accountRepository.findByIdAndUser(accountId, user)).thenReturn(Optional.of(account));
         when(categoryRepository.findByIdAndUser(categoryId, user)).thenReturn(Optional.of(category));

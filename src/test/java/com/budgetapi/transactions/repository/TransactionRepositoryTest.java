@@ -11,6 +11,7 @@ import com.budgetapi.factories.TransactionFactory;
 import com.budgetapi.factories.UserFactory;
 import com.budgetapi.tag.model.Tag;
 import com.budgetapi.transaction.model.Transaction;
+import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.repository.TransactionRepository;
 import com.budgetapi.transaction.specification.TransactionSpecification;
 import com.budgetapi.user.model.User;
@@ -32,7 +33,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -103,8 +103,7 @@ class TransactionRepositoryTest {
     @Test
     @DisplayName("findByIdAndAccountUser should return empty when id does not exists")
     void findByIdAndAccountUser_shouldReturnEmptyWhenIdDoesNotExists() {
-        UUID nonExistentId = UUID.randomUUID();
-        Optional<Transaction> transactionOptional = repository.findByIdAndAccountUser(nonExistentId, user);
+        Optional<Transaction> transactionOptional = repository.findByIdAndAccountUser(new TransactionId(), user);
 
         assertThat(transactionOptional).isEmpty();
     }

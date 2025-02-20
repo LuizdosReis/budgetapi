@@ -7,13 +7,11 @@ import com.budgetapi.tag.model.Tag;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -34,7 +32,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 @Getter
 @Entity
@@ -49,9 +46,8 @@ public class Transaction extends AbstractAuditable implements Serializable {
     @Serial
     private static final long serialVersionUID = -4191457889828348790L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    @EmbeddedId
+    private TransactionId id;
 
     @Embedded
     @AttributeOverride(name = "value", column = @Column(name = "description"))
@@ -84,8 +80,8 @@ public class Transaction extends AbstractAuditable implements Serializable {
     private boolean deleted = Boolean.FALSE;
 
     @Builder
-    private Transaction(UUID id, String description, Account account, Category category, Set<Tag> tags, BigDecimal amount, LocalDate date, TransactionStatus status, boolean deleted) {
-        this.id = id;
+    private Transaction(String description, Account account, Category category, Set<Tag> tags, BigDecimal amount, LocalDate date, TransactionStatus status, boolean deleted) {
+        this.id = new TransactionId();
         this.description = new Description(description);
         this.setAccount(account);
         this.setCategory(category);

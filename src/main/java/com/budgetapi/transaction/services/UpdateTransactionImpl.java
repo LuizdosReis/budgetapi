@@ -10,6 +10,7 @@ import com.budgetapi.tag.repository.TagRepository;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
 import com.budgetapi.transaction.mapper.TransactionMapper;
 import com.budgetapi.transaction.model.Transaction;
+import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.repository.TransactionRepository;
 import com.budgetapi.user.model.User;
 import com.budgetapi.user.service.UserService;
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
-import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -33,7 +33,7 @@ public class UpdateTransactionImpl implements UpdateTransaction {
     private final UserService userService;
 
     @Override
-    public void execute(UUID transactionId, TransactionRequestDTO dto) {
+    public void execute(TransactionId transactionId, TransactionRequestDTO dto) {
         User user = userService.getCurrentUser();
         Account account = accountRepository.findByIdAndUser(dto.accountId(), user)
                 .orElseThrow(() -> new NotFoundException(String.format("Account with id %s not found", dto.accountId())));

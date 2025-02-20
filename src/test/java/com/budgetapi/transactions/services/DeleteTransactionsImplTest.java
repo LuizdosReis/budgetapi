@@ -8,6 +8,7 @@ import com.budgetapi.factories.CategoryFactory;
 import com.budgetapi.factories.TransactionFactory;
 import com.budgetapi.factories.UserFactory;
 import com.budgetapi.transaction.model.Transaction;
+import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.repository.TransactionRepository;
 import com.budgetapi.transaction.services.DeleteTransactionImpl;
 import com.budgetapi.user.model.User;
@@ -21,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -54,22 +54,21 @@ class DeleteTransactionsImplTest {
     @Test
     @DisplayName("delete should call repository findByIdAndAccountUser and delete")
     void delete_shouldCallRepositoryFindByIdAndAccountUserAndDelete() {
-        UUID uuid = UUID.randomUUID();
         Account account = AccountFactory.createAccount(user);
         Category category = CategoryFactory.create(user);
-        Transaction transaction = TransactionFactory.create(account, category, c -> c.id(UUID.randomUUID()));
-        when(repository.findByIdAndAccountUser(uuid, user)).thenReturn(Optional.of(transaction));
+        Transaction transaction = TransactionFactory.create(account, category);
+        when(repository.findByIdAndAccountUser(transaction.getId(), user)).thenReturn(Optional.of(transaction));
 
-        deleteTransaction.execute(uuid);
+        deleteTransaction.execute(transaction.getId());
 
-        verify(repository, times(1)).findByIdAndAccountUser(uuid, user);
+        verify(repository, times(1)).findByIdAndAccountUser(transaction.getId(), user);
         verify(repository, times(1)).delete(transaction);
     }
 
     @Test
     @DisplayName("delete should throw NotFoundException when tag not exists")
     void delete_shouldThrowNotFoundExceptionWhenTagNotExists() {
-        UUID id = UUID.randomUUID();
+        TransactionId id = new TransactionId();
         when(repository.findByIdAndAccountUser(id, user)).thenReturn(Optional.empty());
 
         NotFoundException exception = assertThrows(NotFoundException.class, () -> deleteTransaction.execute(id));

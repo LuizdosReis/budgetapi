@@ -1,7 +1,7 @@
 package com.budgetapi.transaction.services;
 
-import java.util.UUID;
+import com.budgetapi.transaction.model.TransactionId;
 
 public interface DeleteTransaction {
-    void execute(UUID transactionId);
+    void execute(TransactionId transactionId);
 }

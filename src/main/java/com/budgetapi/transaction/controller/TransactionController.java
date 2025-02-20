@@ -1,6 +1,7 @@
 package com.budgetapi.transaction.controller;
 
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
+import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.services.CreateTransaction;
 import com.budgetapi.transaction.services.DeleteTransaction;
 import com.budgetapi.transaction.services.UpdateTransaction;
@@ -15,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.UUID;
 
 @AllArgsConstructor
 @RestController
@@ -35,13 +34,13 @@ public class TransactionController {
     }
 
     @PutMapping("/{id}")
-    void update(@PathVariable UUID id, @RequestBody @Valid TransactionRequestDTO dto) {
+    void update(@PathVariable TransactionId id, @RequestBody @Valid TransactionRequestDTO dto) {
         this.updateTransaction.execute(id, dto);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
-    void delete(@PathVariable UUID id) {
+    void delete(@PathVariable TransactionId id) {
         this.deleteTransaction.execute(id);
     }
 }
