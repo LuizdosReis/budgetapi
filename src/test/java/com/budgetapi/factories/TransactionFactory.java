@@ -8,6 +8,7 @@ import lombok.experimental.UtilityClass;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -28,7 +29,7 @@ public class TransactionFactory {
                 .account(account)
                 .category(category)
                 .amount(DEFAULT_AMOUNT)
-                .date(LocalDate.now())
+                .date(LocalDate.of(2019, Month.OCTOBER, 9))
                 .status(TransactionStatus.REGISTERED)
                 .tags(Set.of());
 

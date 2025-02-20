@@ -19,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -29,11 +30,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.byLessThan;
@@ -229,11 +233,11 @@ class TransactionRepositoryTest {
     void findAllByAccountName_shouldReturnTransactionsWithAccountNameContaining(String substring) {
         Account account = AccountFactory.createAccount(user, c -> c.name("ActiveBank"));
         entityManager.persist(account);
-        Transaction nubankTransaction = createTransaction(user, c -> c.account(account));
+        Transaction expectedTransaction = createTransaction(user, c -> c.account(account));
 
         Page<Transaction> transactions = repository.findAll(TransactionSpecification.accountNameContains(substring), Pageable.unpaged());
         assertThat(transactions)
-                .containsExactly(nubankTransaction);
+                .containsExactly(expectedTransaction);
     }
 
     @ParameterizedTest
@@ -242,13 +246,90 @@ class TransactionRepositoryTest {
     void findAllByTagName_shouldReturnTransactionsWithTagNameContaining(String substring) {
         Tag tag = TagFactory.create(user, c -> c.name("Weekend"));
         entityManager.persist(tag);
-        Transaction weekendTransaction = createTransaction(user, c -> c.tags(Set.of(tag)));
+        Transaction expectedTransaction = createTransaction(user, c -> c.tags(Set.of(tag)));
 
         Page<Transaction> transactions = repository.findAll(TransactionSpecification.tagNameContains(substring), Pageable.unpaged());
         assertThat(transactions)
-                .containsExactly(weekendTransaction);
+                .containsExactly(expectedTransaction);
     }
 
+    @ParameterizedTest
+    @MethodSource("dateGreaterThanOrEqualTo")
+    @DisplayName("findAll with date greater than or equal to given date return transaction")
+    void findAll_withDateGreaterThanOrEqualTo_shouldReturnTransactions(LocalDate date) {
+        Transaction expectedTransaction = createTransaction(user, c -> c.date(LocalDate.of(2025, Month.FEBRUARY, 20)));
+
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.withDateGreaterThanOrEqualTo(date), Pageable.unpaged());
+        assertThat(transactions)
+                .containsExactly(expectedTransaction);
+    }
+
+    private static Stream<LocalDate> dateGreaterThanOrEqualTo() {
+        return Stream.of(
+                LocalDate.of(2025, Month.FEBRUARY, 19),
+                LocalDate.of(2025, Month.JANUARY, 20)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("dateLessThanOrEqualTo")
+    @DisplayName("findAll with date less than or equal to given date return transaction")
+    void findAll_withDateLessThanOrEqualTo_shouldReturnTransactions(LocalDate date) {
+        Transaction expectedTransaction = createTransaction(user, c -> c.date(LocalDate.of(2019, Month.FEBRUARY, 20)));
+
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.withDateLessThanOrEqualTo(date), Pageable.unpaged());
+        assertThat(transactions)
+                .containsExactly(expectedTransaction);
+    }
+
+    private static Stream<LocalDate> dateLessThanOrEqualTo() {
+        return Stream.of(
+                LocalDate.of(2019, Month.OCTOBER, 8),
+                LocalDate.of(2019, Month.FEBRUARY, 20)
+        );
+    }
+
+    @Test
+    @DisplayName("findAll by account ids in should return transactions with account ids on the list")
+    void findAllByAccountIdsIn_shouldReturnTransactionsWithAccountIdsIn() {
+        Account firstAccount = AccountFactory.createAccount(user);
+        Account secondAccount = AccountFactory.createAccount(user);
+        entityManager.persist(firstAccount);
+        entityManager.persist(secondAccount);
+        Transaction firstTransaction = createTransaction(user, c -> c.account(firstAccount));
+        Transaction secondTransaction = createTransaction(user, c -> c.account(secondAccount));
+
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.accountIdsIn(Set.of(firstAccount.getId(), secondAccount.getId())), Pageable.unpaged());
+        assertThat(transactions).containsExactlyInAnyOrder(firstTransaction, secondTransaction);
+    }
+
+    @Test
+    @DisplayName("findAll by category ids in should return transactions with category ids on the list")
+    void findAllByCategoryIdsIn_shouldReturnTransactionsWithCategoryIdsIn() {
+        Category firstCategory = CategoryFactory.create(user);
+        Category secondCategory = CategoryFactory.create(user);
+        entityManager.persist(firstCategory);
+        entityManager.persist(secondCategory);
+        Transaction firstTransaction = createTransaction(user, c -> c.category(firstCategory));
+        Transaction secondTransaction = createTransaction(user, c -> c.category(secondCategory));
+
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.categoryIdsIn(Set.of(firstCategory.getId(), secondCategory.getId())), Pageable.unpaged());
+        assertThat(transactions).containsExactlyInAnyOrder(firstTransaction, secondTransaction);
+    }
+
+    @Test
+    @DisplayName("findAll by tag ids in should return transactions with tag ids on the list")
+    void findAllByTagIdsIn_shouldReturnTransactionsWithTagIdsIn() {
+        Tag firstTag = TagFactory.create(user, c -> c.name("Weekend"));
+        Tag secondTag = TagFactory.create(user, c -> c.name("Restaurant"));
+        entityManager.persist(firstTag);
+        entityManager.persist(secondTag);
+        Transaction firstTransaction = createTransaction(user, c -> c.tags(Set.of(firstTag)));
+        Transaction secondTransaction = createTransaction(user, c -> c.tags(Set.of(secondTag)));
+
+        Page<Transaction> transactions = repository.findAll(TransactionSpecification.tagIdsIn(Set.of(firstTag.getId(), secondTag.getId())), Pageable.unpaged());
+        assertThat(transactions).containsExactlyInAnyOrder(firstTransaction, secondTransaction);
+    }
 
     private Transaction createTransaction(User user) {
         return createTransaction(user, c -> {

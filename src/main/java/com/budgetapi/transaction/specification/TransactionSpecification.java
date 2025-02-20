@@ -5,6 +5,10 @@ import com.budgetapi.user.model.User;
 import lombok.experimental.UtilityClass;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDate;
+import java.util.Set;
+import java.util.UUID;
+
 @UtilityClass
 public class TransactionSpecification {
 
@@ -41,5 +45,31 @@ public class TransactionSpecification {
     public static Specification<Transaction> tagNameContains(String substring) {
         return (root, query, criteriaBuilder) ->
                 substring == null ? null : criteriaBuilder.like(criteriaBuilder.lower(criteriaBuilder.toString(root.get("tags").get("name"))), "%" + substring.toLowerCase() + "%");
+    }
+
+
+    public static Specification<Transaction> withDateGreaterThanOrEqualTo(LocalDate date) {
+        return (root, query, criteriaBuilder) ->
+                date == null ? null : criteriaBuilder.greaterThanOrEqualTo(root.get("date"), date);
+    }
+
+    public static Specification<Transaction> withDateLessThanOrEqualTo(LocalDate date) {
+        return (root, query, criteriaBuilder) ->
+                date == null ? null : criteriaBuilder.lessThanOrEqualTo(root.get("date"), date);
+    }
+
+    public static Specification<Transaction> accountIdsIn(Set<UUID> accountIds) {
+        return (root, query, criteriaBuilder) ->
+                accountIds.isEmpty() ? null : criteriaBuilder.in(root.get("account").get("id")).value(accountIds);
+    }
+
+    public static Specification<Transaction> categoryIdsIn(Set<UUID> categoryIds) {
+        return (root, query, criteriaBuilder) ->
+                categoryIds.isEmpty() ? null : criteriaBuilder.in(root.get("category").get("id")).value(categoryIds);
+    }
+
+    public static Specification<Transaction> tagIdsIn(Set<UUID> tagIds) {
+        return (root, query, criteriaBuilder) ->
+                tagIds.isEmpty() ? null : criteriaBuilder.in(root.get("tags").get("id")).value(tagIds);
     }
 }
