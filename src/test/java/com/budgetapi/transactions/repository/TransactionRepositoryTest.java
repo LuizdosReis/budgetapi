@@ -10,10 +10,10 @@ import com.budgetapi.factories.TagFactory;
 import com.budgetapi.factories.TransactionFactory;
 import com.budgetapi.factories.UserFactory;
 import com.budgetapi.tag.model.Tag;
+import com.budgetapi.transaction.dto.TransactionSearchCriteria;
 import com.budgetapi.transaction.model.Transaction;
 import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.repository.TransactionRepository;
-import com.budgetapi.transaction.specification.TransactionSpecification;
 import com.budgetapi.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -144,122 +144,129 @@ class TransactionRepositoryTest {
     }
 
     @Test
-    @DisplayName("findAll by description should return transactions with exact description match")
-    void findAllByDescription_shouldReturnTransactionsWithExactDescriptionMatch() {
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.descriptionContains("transaction2"), Pageable.unpaged());
+    @DisplayName("findAllBy should return transactions with description containing exact searchTerm match")
+    void findAllBy_shouldReturnTransactionsWithDescriptionContainingESearchTermMatch() {
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder().searchTerm("transaction2").build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
         assertThat(transactions)
                 .containsExactly(transaction2);
     }
 
     @Test
-    @DisplayName("findAll by description should return transactions with description containing substring 'trans'")
-    void findAllByDescription_shouldReturnTransactionsWithDescriptionContainingTransSubstring() {
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.descriptionContains("trans"), Pageable.unpaged());
+    @DisplayName("findAllBy should return transactions with description containing substring 'trans'")
+    void findAllBy_shouldReturnTransactionsWithDescriptionContainingTransSubstring() {
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder().searchTerm("trans").build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
         assertThat(transactions)
                 .containsExactly(transaction, transaction2, transaction3);
     }
 
     @Test
-    @DisplayName("findAll by description should return transactions with description containing substring 'action3'")
-    void findAllByDescription_shouldReturnTransactionsWithDescriptionContainingAction3Substring() {
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.descriptionContains("action3"), Pageable.unpaged());
+    @DisplayName("findAllBy should return transactions with description containing substring 'action3'")
+    void findAllBy_shouldReturnTransactionsWithDescriptionContainingAction3Substring() {
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder().searchTerm("action3").build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
         assertThat(transactions)
                 .containsExactly(transaction3);
     }
 
     @Test
-    @DisplayName("findAll by user should return transactions from user")
-    void findAllByUser_shouldReturnTransactionsFromUser() {
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.userEquals(user), Pageable.unpaged());
-        assertThat(transactions)
-                .hasSize(3)
-                .containsExactlyInAnyOrder(transaction, transaction2, transaction3);
-    }
-
-    @Test
-    @DisplayName("findAll by user should return transactions from other user")
-    void findAllByUser_shouldNotReturnTransactionsFromOtherUser() {
+    @DisplayName("findAllBy should not return transactions from other user")
+    void findAllBy_shouldNotReturnTransactionsFromOtherUser() {
         User otherUser = entityManager.persist(UserFactory.createUser(c -> c.username("otherUser")));
         createTransaction(otherUser);
 
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.userEquals(user), Pageable.unpaged());
+        TransactionSearchCriteria criteria = TransactionSearchCriteria
+                .builder()
+                .accountIds(Set.of())
+                .tagIds(Set.of())
+                .categoryIds(Set.of())
+                .build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
         assertThat(transactions)
                 .containsExactly(transaction, transaction2, transaction3);
     }
 
     @Test
-    @DisplayName("findAll isActive should not return active transactions")
-    void findAllIsActive_shouldReturnActiveTransactions() {
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.isActive(), Pageable.unpaged());
+    @DisplayName("findAllBy should not return deleted transactions")
+    void findAllBy_shouldNotReturnDeletedTransactions() {
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder().nonDeleted(true).build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
         assertThat(transactions)
                 .hasSize(2)
                 .containsExactlyInAnyOrder(transaction, transaction2);
     }
 
     @Test
-    @DisplayName("findAll should return all transactions including deleted")
-    void findAll_shouldReturnAllTransactionsIncludingDeleted() {
-        Page<Transaction> transactions = repository.findAll(null, Pageable.unpaged());
+    @DisplayName("findAllBy should return all transactions including deleted")
+    void findAllBy_shouldReturnAllTransactionsIncludingDeleted() {
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder().nonDeleted(false).build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
         assertThat(transactions)
                 .hasSize(3)
                 .containsExactlyInAnyOrder(transaction, transaction2, transaction3);
     }
 
     @ParameterizedTest
-    @DisplayName("findAll by amount should return transactions with amount containing the substring")
     @ValueSource(strings = {"5.50", "5", "50"})
-    void findAllByAmount_shouldReturnTransactionsWithAmountContainingSubstring(String substring) {
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.amountContains(substring), Pageable.unpaged());
+    @DisplayName("findAllBy should return transactions with amount containing searchTerm")
+    void findAllBy_shouldReturnTransactionsWithAmountContainingSearchTerm(String searchTerm) {
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder().searchTerm(searchTerm).build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
         assertThat(transactions)
                 .containsExactly(transaction);
     }
 
     @ParameterizedTest
-    @DisplayName("findAll by category name should return transactions with category name containing the substring")
     @ValueSource(strings = {"Expense", "Exp", "pen", "nse"})
-    void findAllByCategoryName_shouldReturnTransactionsWithCategoryNameContainingSubstring(String substring) {
+    @DisplayName("findAllBy should return transactions with category name containing searchTerm")
+    void findAllBy_shouldReturnTransactionsWithCategoryNameContainingSearchTerm(String searchTerm) {
         Category category = CategoryFactory.create(user, c -> c.name("Expense"));
         entityManager.persist(category);
-        Transaction expenseTransaction = createTransaction(user, c -> c.category(category));
+        Transaction expectedTransaction = createTransaction(user, c -> c.category(category));
 
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.categoryNameContains(substring), Pageable.unpaged());
-        assertThat(transactions)
-                .containsExactly(expenseTransaction);
-    }
-
-    @ParameterizedTest
-    @DisplayName("findAll by account name should return transactions with account name containing the substring")
-    @ValueSource(strings = {"ActiveBank", "iveBa", "Act", "eBank"})
-    void findAllByAccountName_shouldReturnTransactionsWithAccountNameContaining(String substring) {
-        Account account = AccountFactory.createAccount(user, c -> c.name("ActiveBank"));
-        entityManager.persist(account);
-        Transaction expectedTransaction = createTransaction(user, c -> c.account(account));
-
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.accountNameContains(substring), Pageable.unpaged());
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder().searchTerm(searchTerm).build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
         assertThat(transactions)
                 .containsExactly(expectedTransaction);
     }
 
     @ParameterizedTest
-    @DisplayName("findAll by tag name should return transactions with tag name containing the substring")
+    @ValueSource(strings = {"Milennium", "ium", "Mil", "lenn"})
+    @DisplayName("findAll should return transactions with account name containing searchTerm")
+    void findAllBy_shouldReturnTransactionsWithAccountNameContainingSearchTerm(String searchTerm) {
+        Account account = AccountFactory.createAccount(user, c -> c.name("Milennium"));
+        entityManager.persist(account);
+        Transaction expectedTransaction = createTransaction(user, c -> c.account(account));
+
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder().searchTerm(searchTerm).build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
+        assertThat(transactions)
+                .containsExactly(expectedTransaction);
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"Weekend", "eeke", "wee", "end"})
-    void findAllByTagName_shouldReturnTransactionsWithTagNameContaining(String substring) {
+    @DisplayName("findAllBy should return transactions with tag name containing SearchTerm")
+    void findAllBy_shouldReturnTransactionsWithTagNameContainingSearchTerm(String searchTerm) {
         Tag tag = TagFactory.create(user, c -> c.name("Weekend"));
         entityManager.persist(tag);
         Transaction expectedTransaction = createTransaction(user, c -> c.tags(Set.of(tag)));
 
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.tagNameContains(substring), Pageable.unpaged());
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder().searchTerm(searchTerm).build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
         assertThat(transactions)
                 .containsExactly(expectedTransaction);
     }
 
     @ParameterizedTest
     @MethodSource("dateGreaterThanOrEqualTo")
-    @DisplayName("findAll with date greater than or equal to given date return transaction")
-    void findAll_withDateGreaterThanOrEqualTo_shouldReturnTransactions(LocalDate date) {
+    @DisplayName("findAllBy should return transactions with date greater than or equal to given sinceDate")
+    void findAllBy_shouldReturnTransactionWithDateGreaterThanOrEqualToGivenSinceDate(LocalDate sinceDate) {
         Transaction expectedTransaction = createTransaction(user, c -> c.date(LocalDate.of(2025, Month.FEBRUARY, 20)));
 
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.withDateGreaterThanOrEqualTo(date), Pageable.unpaged());
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder().sinceDate(sinceDate).build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
         assertThat(transactions)
                 .containsExactly(expectedTransaction);
     }
@@ -273,11 +280,12 @@ class TransactionRepositoryTest {
 
     @ParameterizedTest
     @MethodSource("dateLessThanOrEqualTo")
-    @DisplayName("findAll with date less than or equal to given date return transaction")
-    void findAll_withDateLessThanOrEqualTo_shouldReturnTransactions(LocalDate date) {
+    @DisplayName("findAllBy should return transactions with date less than or equal to given until date")
+    void findAllBy_shouldReturnTransactionsWithDateLessThanOrEqualToGivenUntilDate(LocalDate untilDate) {
         Transaction expectedTransaction = createTransaction(user, c -> c.date(LocalDate.of(2019, Month.FEBRUARY, 20)));
 
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.withDateLessThanOrEqualTo(date), Pageable.unpaged());
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder().untilDate(untilDate).build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
         assertThat(transactions)
                 .containsExactly(expectedTransaction);
     }
@@ -290,8 +298,8 @@ class TransactionRepositoryTest {
     }
 
     @Test
-    @DisplayName("findAll by account ids in should return transactions with account ids on the list")
-    void findAllByAccountIdsIn_shouldReturnTransactionsWithAccountIdsIn() {
+    @DisplayName("findAllBy should return transactions with account ids in")
+    void findAllBy_shouldReturnTransactionsWithAccountIdsIn() {
         Account firstAccount = AccountFactory.createAccount(user);
         Account secondAccount = AccountFactory.createAccount(user);
         entityManager.persist(firstAccount);
@@ -299,13 +307,14 @@ class TransactionRepositoryTest {
         Transaction firstTransaction = createTransaction(user, c -> c.account(firstAccount));
         Transaction secondTransaction = createTransaction(user, c -> c.account(secondAccount));
 
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.accountIdsIn(Set.of(firstAccount.getId(), secondAccount.getId())), Pageable.unpaged());
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder().accountIds(Set.of(firstAccount.getId(), secondAccount.getId())).build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
         assertThat(transactions).containsExactlyInAnyOrder(firstTransaction, secondTransaction);
     }
 
     @Test
-    @DisplayName("findAll by category ids in should return transactions with category ids on the list")
-    void findAllByCategoryIdsIn_shouldReturnTransactionsWithCategoryIdsIn() {
+    @DisplayName("findAllBy should return transactions with category ids in")
+    void findAllBy_shouldReturnTransactionsWithCategoryIdsIn() {
         Category firstCategory = CategoryFactory.create(user);
         Category secondCategory = CategoryFactory.create(user);
         entityManager.persist(firstCategory);
@@ -313,13 +322,14 @@ class TransactionRepositoryTest {
         Transaction firstTransaction = createTransaction(user, c -> c.category(firstCategory));
         Transaction secondTransaction = createTransaction(user, c -> c.category(secondCategory));
 
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.categoryIdsIn(Set.of(firstCategory.getId(), secondCategory.getId())), Pageable.unpaged());
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder().categoryIds(Set.of(firstCategory.getId(), secondCategory.getId())).build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
         assertThat(transactions).containsExactlyInAnyOrder(firstTransaction, secondTransaction);
     }
 
     @Test
-    @DisplayName("findAll by tag ids in should return transactions with tag ids on the list")
-    void findAllByTagIdsIn_shouldReturnTransactionsWithTagIdsIn() {
+    @DisplayName("findAllBy should return transactions with tag ids in")
+    void findAllBy_shouldReturnTransactionsWithTagIdsIn() {
         Tag firstTag = TagFactory.create(user, c -> c.name("Weekend"));
         Tag secondTag = TagFactory.create(user, c -> c.name("Restaurant"));
         entityManager.persist(firstTag);
@@ -327,7 +337,8 @@ class TransactionRepositoryTest {
         Transaction firstTransaction = createTransaction(user, c -> c.tags(Set.of(firstTag)));
         Transaction secondTransaction = createTransaction(user, c -> c.tags(Set.of(secondTag)));
 
-        Page<Transaction> transactions = repository.findAll(TransactionSpecification.tagIdsIn(Set.of(firstTag.getId(), secondTag.getId())), Pageable.unpaged());
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder().tagIds(Set.of(firstTag.getId(), secondTag.getId())).build();
+        Page<Transaction> transactions = repository.findAllBy(criteria, user, Pageable.unpaged());
         assertThat(transactions).containsExactlyInAnyOrder(firstTransaction, secondTransaction);
     }
 
