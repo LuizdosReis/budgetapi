@@ -3,6 +3,10 @@ package com.budgetapi.transaction.mapper;
 import com.budgetapi.account.model.Account;
 import com.budgetapi.category.model.Category;
 import com.budgetapi.tag.model.Tag;
+import com.budgetapi.transaction.dto.AccountDTO;
+import com.budgetapi.transaction.dto.CategoryDTO;
+import com.budgetapi.transaction.dto.TagDTO;
+import com.budgetapi.transaction.dto.TransactionDTO;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
 import com.budgetapi.transaction.model.Transaction;
 import org.mapstruct.CollectionMappingStrategy;
@@ -27,4 +31,12 @@ public interface TransactionMapper {
     @Mapping(target = "date", source = "dto.date")
     @Mapping(target = "status", source = "dto.status")
     void updateModel(TransactionRequestDTO dto, Account account, Category category, Set<Tag> tags, @MappingTarget Transaction transaction);
+
+    TransactionDTO toDTO(Transaction transaction);
+
+    TagDTO toDTO(Tag tag);
+    
+    AccountDTO toDTO(Account account);
+
+    CategoryDTO toDTO(Category category);
 }

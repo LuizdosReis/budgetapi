@@ -8,6 +8,8 @@ import com.budgetapi.factories.TagFactory;
 import com.budgetapi.factories.TransactionFactory;
 import com.budgetapi.factories.UserFactory;
 import com.budgetapi.tag.model.Tag;
+import com.budgetapi.transaction.dto.TagDTO;
+import com.budgetapi.transaction.dto.TransactionDTO;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
 import com.budgetapi.transaction.mapper.TransactionMapper;
 import com.budgetapi.transaction.model.Transaction;
@@ -26,14 +28,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class TransactionMapperTest {
 
+    private final User user = UserFactory.createUser();
+    private final Account account = AccountFactory.createAccount(user);
+    private final Category category = CategoryFactory.create(user);
+    private final Tag tag = TagFactory.create(user);
+
 
     @Test
     @DisplayName("toModel should create tag with correct fields")
     void toModel_shouldCreateTransactionWithCorrectFields() {
-        User user = UserFactory.createUser();
-        Account account = AccountFactory.createAccount(user);
-        Category category = CategoryFactory.create(user);
-        Tag tag = TagFactory.create(user);
         TransactionRequestDTO dto = new TransactionRequestDTO("transaction", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
 
         Transaction transaction = TransactionMapper.MAPPER.toModel(dto, account, category, Set.of(tag));
@@ -51,10 +54,6 @@ class TransactionMapperTest {
     @Test
     @DisplayName("updateModel should update with correct fields")
     void updateModel_shouldUpdateWithCorrectFields() {
-        User user = UserFactory.createUser();
-        Account account = AccountFactory.createAccount(user);
-        Category category = CategoryFactory.create(user);
-        Tag tag = TagFactory.create(user);
         TransactionRequestDTO dto = new TransactionRequestDTO("transaction", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.of(2022, Month.DECEMBER, 12), TransactionStatus.SCHEDULED);
         Transaction transaction = TransactionFactory.create(account, category);
 
@@ -71,5 +70,27 @@ class TransactionMapperTest {
         assertThat(transaction.getTags()).isEqualTo(Set.of(tag));
         assertThat(transaction.getStatus()).isEqualTo(dto.status());
         assertThat(transaction.isDeleted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("toDTO should create DTO with correct fields")
+    void toDTO_shouldCreateDTOWithCorrectFields() {
+        Transaction transaction = TransactionFactory.create(account, category, c -> c.tags(Set.of(tag)));
+
+        TransactionDTO dto = TransactionMapper.MAPPER.toDTO(transaction);
+
+        assertThat(dto.id()).isEqualTo(transaction.getId());
+        assertThat(dto.description()).isEqualTo(transaction.getDescription());
+        assertThat(dto.amount()).isEqualTo(transaction.getAmount());
+        assertThat(dto.date()).isEqualTo(transaction.getDate());
+        assertThat(dto.account().name()).isEqualTo(account.getName());
+        assertThat(dto.account().currency()).isEqualTo(account.getCurrency());
+        assertThat(dto.account().id()).isEqualTo(account.getId());
+        assertThat(dto.category().name()).isEqualTo(category.getName());
+        assertThat(dto.category().id()).isEqualTo(category.getId());
+        assertThat(dto.category().type()).isEqualTo(category.getType().toString());
+        assertThat(dto.tags()).isEqualTo(Set.of(new TagDTO(tag.getId(), tag.getName())));
+        assertThat(dto.status()).isEqualTo(transaction.getStatus());
+        assertThat(dto.deleted()).isEqualTo(transaction.isDeleted());
     }
 }
