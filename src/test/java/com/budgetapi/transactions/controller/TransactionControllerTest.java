@@ -4,10 +4,12 @@ import com.budgetapi.AbstractControllerTest;
 import com.budgetapi.erro.NotFoundException;
 import com.budgetapi.transaction.controller.TransactionController;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
+import com.budgetapi.transaction.dto.TransactionSearchCriteria;
 import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.model.TransactionStatus;
 import com.budgetapi.transaction.services.CreateTransaction;
 import com.budgetapi.transaction.services.DeleteTransaction;
+import com.budgetapi.transaction.services.SearchTransactions;
 import com.budgetapi.transaction.services.UpdateTransaction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -17,9 +19,12 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -36,6 +41,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -59,6 +65,9 @@ class TransactionControllerTest extends AbstractControllerTest {
 
     @MockitoBean
     private DeleteTransaction deleteTransaction;
+
+    @MockitoBean
+    private SearchTransactions searchTransactions;
 
     @Test
     @DisplayName("POST /transactions returns 201 and calls save when payload is valid")
@@ -189,5 +198,34 @@ class TransactionControllerTest extends AbstractControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message", is(String.format("Transaction with id %s not found", transactionId.id()))))
                 .andExpect(jsonPath("$.timestamp", notNullValue()));
+    }
+
+    @Test
+    @DisplayName("GET /transactions returns 200 OK with transactions page")
+    void get_return200() throws Exception {
+        TransactionSearchCriteria criteria = TransactionSearchCriteria.builder()
+                .nonDeleted(true)
+                .searchTerm("trans")
+                .tagIds(Set.of(UUID.randomUUID(), UUID.randomUUID()))
+                .accountIds(Set.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()))
+                .categoryIds(Set.of(UUID.randomUUID()))
+                .sinceDate(LocalDate.now())
+                .untilDate(LocalDate.now())
+                .build();
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("searchTerm", criteria.searchTerm());
+        params.add("nonDeleted", String.valueOf(criteria.nonDeleted()));
+        criteria.tagIds().forEach(tagId -> params.add("tagIds", tagId.toString()));
+        criteria.accountIds().forEach(accountId -> params.add("accountIds", accountId.toString()));
+        criteria.categoryIds().forEach(categoryId -> params.add("categoryIds", categoryId.toString()));
+        params.add("sinceDate", criteria.sinceDate().toString());
+        params.add("untilDate", criteria.untilDate().toString());
+
+        this.mockMvc.perform(get(TransactionController.BASE_URL)
+                        .params(params))
+                .andExpect(status().isOk());
+
+        verify(searchTransactions, times(1)).execute(criteria, PageRequest.of(0, 20));
     }
 }

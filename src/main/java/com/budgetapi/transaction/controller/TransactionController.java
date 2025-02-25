@@ -1,14 +1,20 @@
 package com.budgetapi.transaction.controller;
 
+import com.budgetapi.transaction.dto.TransactionDTO;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
+import com.budgetapi.transaction.dto.TransactionSearchCriteria;
 import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.services.CreateTransaction;
 import com.budgetapi.transaction.services.DeleteTransaction;
+import com.budgetapi.transaction.services.SearchTransactions;
 import com.budgetapi.transaction.services.UpdateTransaction;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -26,6 +32,7 @@ public class TransactionController {
     private final CreateTransaction createTransaction;
     private final UpdateTransaction updateTransaction;
     private final DeleteTransaction deleteTransaction;
+    private final SearchTransactions searchTransactions;
 
     @PostMapping
     @ResponseStatus(code = HttpStatus.CREATED)
@@ -42,5 +49,10 @@ public class TransactionController {
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
     void delete(@PathVariable TransactionId id) {
         this.deleteTransaction.execute(id);
+    }
+
+    @GetMapping
+    Page<TransactionDTO> get(TransactionSearchCriteria criteria, Pageable pageable) {
+        return this.searchTransactions.execute(criteria, pageable);
     }
 }

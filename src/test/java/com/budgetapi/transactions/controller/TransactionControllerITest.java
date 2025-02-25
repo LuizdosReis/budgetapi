@@ -39,9 +39,13 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.byLessThan;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -146,5 +150,19 @@ class TransactionControllerITest {
         Optional<Transaction> transactionOptional = transactionRepository.findById(transaction.getId());
         assertThat(transactionOptional).isPresent();
         assertThat(transactionOptional.get().isDeleted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("GET /transactions returns 200")
+    void get_returns200() throws Exception {
+        Transaction transaction = transactionRepository.save(TransactionFactory.create(account, category));
+
+        this.mockMvc.perform(get(TransactionController.BASE_URL)
+                        .param("searchTerm", "description")
+                        .param("nonDeleted", "true"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements", is(1)))
+                .andExpect(jsonPath("$.content[0].id", is(transaction.getId().id().toString())));
     }
 }

@@ -32,6 +32,7 @@ public interface TransactionMapper {
     @Mapping(target = "status", source = "dto.status")
     void updateModel(TransactionRequestDTO dto, Account account, Category category, Set<Tag> tags, @MappingTarget Transaction transaction);
 
+    @Mapping(target = "id", source = "id.id")
     TransactionDTO toDTO(Transaction transaction);
 
     TagDTO toDTO(Tag tag);

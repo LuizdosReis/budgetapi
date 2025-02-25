@@ -75,7 +75,7 @@ class SearchTransactionsImplTest {
         AccountDTO accountDTO = new AccountDTO(account.getId(), account.getName(), account.getCurrency());
         CategoryDTO categoryDTO = new CategoryDTO(category.getId(), category.getName(), category.getType().name());
         TagDTO tagDTO = new TagDTO(tag.getId(), tag.getName());
-        TransactionDTO dto = new TransactionDTO("description", accountDTO, categoryDTO, Set.of(tagDTO), BigDecimal.TEN, transaction.getId(), transaction.getDate(), transaction.getStatus(), transaction.isDeleted());
+        TransactionDTO dto = new TransactionDTO("description", accountDTO, categoryDTO, Set.of(tagDTO), BigDecimal.TEN, transaction.getId().id(), transaction.getDate(), transaction.getStatus(), transaction.isDeleted());
 
         when(repository.findAllBy(criteria, user, pageRequest)).thenReturn(new PageImpl<>(List.of(transaction)));
         when(mapper.toDTO(transaction)).thenReturn(dto);

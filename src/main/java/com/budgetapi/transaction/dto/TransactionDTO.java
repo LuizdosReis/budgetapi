@@ -1,18 +1,18 @@
 package com.budgetapi.transaction.dto;
 
-import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.model.TransactionStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
+import java.util.UUID;
 
 public record TransactionDTO(String description,
                              AccountDTO account,
                              CategoryDTO category,
                              Set<TagDTO> tags,
                              BigDecimal amount,
-                             TransactionId id,
+                             UUID id,
                              LocalDate date,
                              TransactionStatus status,
                              boolean deleted) {

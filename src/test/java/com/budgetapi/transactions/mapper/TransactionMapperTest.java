@@ -79,7 +79,7 @@ class TransactionMapperTest {
 
         TransactionDTO dto = TransactionMapper.MAPPER.toDTO(transaction);
 
-        assertThat(dto.id()).isEqualTo(transaction.getId());
+        assertThat(dto.id()).isEqualTo(transaction.getId().id());
         assertThat(dto.description()).isEqualTo(transaction.getDescription());
         assertThat(dto.amount()).isEqualTo(transaction.getAmount());
         assertThat(dto.date()).isEqualTo(transaction.getDate());
