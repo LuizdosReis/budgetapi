@@ -6,6 +6,7 @@ import com.budgetapi.transaction.dto.TransactionSearchCriteria;
 import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.services.CreateTransaction;
 import com.budgetapi.transaction.services.DeleteTransaction;
+import com.budgetapi.transaction.services.GetTransaction;
 import com.budgetapi.transaction.services.SearchTransactions;
 import com.budgetapi.transaction.services.UpdateTransaction;
 import jakarta.validation.Valid;
@@ -33,6 +34,7 @@ public class TransactionController {
     private final UpdateTransaction updateTransaction;
     private final DeleteTransaction deleteTransaction;
     private final SearchTransactions searchTransactions;
+    private final GetTransaction getTransaction;
 
     @PostMapping
     @ResponseStatus(code = HttpStatus.CREATED)
@@ -54,5 +56,10 @@ public class TransactionController {
     @GetMapping
     Page<TransactionDTO> get(TransactionSearchCriteria criteria, Pageable pageable) {
         return this.searchTransactions.execute(criteria, pageable);
+    }
+
+    @GetMapping("/{id}")
+    TransactionDTO get(@PathVariable TransactionId id) {
+        return this.getTransaction.execute(id);
     }
 }

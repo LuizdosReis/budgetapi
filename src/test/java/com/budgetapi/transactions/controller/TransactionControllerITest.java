@@ -153,8 +153,8 @@ class TransactionControllerITest {
     }
 
     @Test
-    @DisplayName("GET /transactions returns 200")
-    void get_returns200() throws Exception {
+    @DisplayName("GET /transactions returns 200 with page")
+    void get_returns200WithPage() throws Exception {
         Transaction transaction = transactionRepository.save(TransactionFactory.create(account, category));
 
         this.mockMvc.perform(get(TransactionController.BASE_URL)
@@ -164,5 +164,16 @@ class TransactionControllerITest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements", is(1)))
                 .andExpect(jsonPath("$.content[0].id", is(transaction.getId().id().toString())));
+    }
+
+    @Test
+    @DisplayName("GET /transaction/{id} returns 200 with transaction")
+    void get_returns200WithTransaction() throws Exception {
+        Transaction transaction = transactionRepository.save(TransactionFactory.create(account, category));
+
+        this.mockMvc.perform(get(TransactionController.BASE_URL + "/" + transaction.getId().id()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(transaction.getId().id().toString())));
     }
 }

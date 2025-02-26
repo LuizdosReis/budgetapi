@@ -3,12 +3,16 @@ package com.budgetapi.transactions.controller;
 import com.budgetapi.AbstractControllerTest;
 import com.budgetapi.erro.NotFoundException;
 import com.budgetapi.transaction.controller.TransactionController;
+import com.budgetapi.transaction.dto.AccountDTO;
+import com.budgetapi.transaction.dto.CategoryDTO;
+import com.budgetapi.transaction.dto.TransactionDTO;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
 import com.budgetapi.transaction.dto.TransactionSearchCriteria;
 import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.model.TransactionStatus;
 import com.budgetapi.transaction.services.CreateTransaction;
 import com.budgetapi.transaction.services.DeleteTransaction;
+import com.budgetapi.transaction.services.GetTransaction;
 import com.budgetapi.transaction.services.SearchTransactions;
 import com.budgetapi.transaction.services.UpdateTransaction;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +44,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -68,6 +73,9 @@ class TransactionControllerTest extends AbstractControllerTest {
 
     @MockitoBean
     private SearchTransactions searchTransactions;
+
+    @MockitoBean
+    private GetTransaction getTransaction;
 
     @Test
     @DisplayName("POST /transactions returns 201 and calls save when payload is valid")
@@ -201,8 +209,8 @@ class TransactionControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    @DisplayName("GET /transactions returns 200 OK with transactions page")
-    void get_return200() throws Exception {
+    @DisplayName("GET /transactions returns 200 OK and calls searchTransactions")
+    void get_return200AndCallSearchTransaction() throws Exception {
         TransactionSearchCriteria criteria = TransactionSearchCriteria.builder()
                 .nonDeleted(true)
                 .searchTerm("trans")
@@ -227,5 +235,44 @@ class TransactionControllerTest extends AbstractControllerTest {
                 .andExpect(status().isOk());
 
         verify(searchTransactions, times(1)).execute(criteria, PageRequest.of(0, 20));
+    }
+
+    @Test
+    @DisplayName("GET /transaction/{id} returns 200 OK with transaction")
+    void get_return200And() throws Exception {
+        TransactionId transactionId = new TransactionId();
+        AccountDTO account = new AccountDTO(UUID.randomUUID(), "account", "BRL");
+        CategoryDTO category = new CategoryDTO(UUID.randomUUID(), "category", "type");
+        TransactionDTO transaction = new TransactionDTO("description", account, category, Set.of(), BigDecimal.TEN, transactionId.id(), LocalDate.now(), TransactionStatus.REGISTERED, false);
+
+        when(getTransaction.execute(transactionId)).thenReturn(transaction);
+
+        this.mockMvc.perform(get(TransactionController.BASE_URL + "/" + transactionId.id()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(transactionId.id().toString()))
+                .andExpect(jsonPath("$.description").value(transaction.description()))
+                .andExpect(jsonPath("$.account.id").value(account.id().toString()))
+                .andExpect(jsonPath("$.account.name").value(account.name()))
+                .andExpect(jsonPath("$.account.currency").value(account.currency()))
+                .andExpect(jsonPath("$.category.id").value(category.id().toString()))
+                .andExpect(jsonPath("$.category.name").value(category.name()))
+                .andExpect(jsonPath("$.category.type").value(category.type()))
+                .andExpect(jsonPath("$.tags").isEmpty())
+                .andExpect(jsonPath("$.amount").value(transaction.amount()))
+                .andExpect(jsonPath("$.date").value(transaction.date().toString()))
+                .andExpect(jsonPath("$.status").value(transaction.status().name()))
+                .andExpect(jsonPath("$.deleted").value(transaction.deleted()));
+    }
+
+    @Test
+    @DisplayName("GET /transaction/{id} returns 404 not found when service throws notFoundException")
+    void get_returns404_whenServiceThrowsNotFoundException() throws Exception {
+        TransactionId transactionId = new TransactionId();
+        doThrow(new NotFoundException(String.format("Transaction with id %s not found", transactionId.id()))).when(getTransaction).execute(transactionId);
+
+        this.mockMvc.perform(get(TransactionController.BASE_URL + "/" + transactionId.id()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message", is(String.format("Transaction with id %s not found", transactionId.id()))))
+                .andExpect(jsonPath("$.timestamp", notNullValue()));
     }
 }
