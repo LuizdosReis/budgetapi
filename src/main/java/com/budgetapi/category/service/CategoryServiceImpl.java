@@ -57,6 +57,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public void update(UUID id, CategoryRequestDTO dto) {
         Category category = repository.findByIdAndUser(id, userService.getCurrentUser())
                 .orElseThrow(() -> new NotFoundException(String.format(CATEGORY_NOT_FOUND, id)));
