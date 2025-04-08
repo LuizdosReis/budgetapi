@@ -46,6 +46,7 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    @Transactional
     public void delete(UUID id) {
         Tag tag = findByIdAndCurrentUser(id);
         repository.delete(tag);
