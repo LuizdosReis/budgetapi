@@ -10,10 +10,12 @@ RUN addgroup --system juser
 
 RUN adduser -S -s /bin/false -G juser juser
 
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar /application/opentelemetry-javaagent.jar
+
 RUN chown -R juser:juser /application
 
 USER juser
 
 HEALTHCHECK --interval=5s --timeout=3s CMD curl --fail http://localhost:8080/api/actuator/health || exit 1
 
-CMD ["java", "-Xms64m", "-Xmx64m", "-XX:+UseG1GC", "-jar", "budgetapi-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-XX:+UseG1GC", "-javaagent:./opentelemetry-javaagent.jar", "-Dotel.instrumentation.common.default-enabled=false", "-Dotel.instrumentation.micrometer.enabled=true", "-Dotel.instrumentation.spring-boot-actuator-autoconfigure.enabled=true", "-jar", "budgetapi-0.0.1-SNAPSHOT.jar"]
