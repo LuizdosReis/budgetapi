@@ -10,7 +10,7 @@ RUN addgroup --system juser
 
 RUN adduser -S -s /bin/false -G juser juser
 
-ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar /application/opentelemetry-javaagent.jar
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.15.0/opentelemetry-javaagent.jar /application/opentelemetry-javaagent.jar
 
 RUN chown -R juser:juser /application
 
