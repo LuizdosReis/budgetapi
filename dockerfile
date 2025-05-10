@@ -1,8 +1,10 @@
+FROM alpine:3.14 AS downloader
+
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.15.0/opentelemetry-javaagent.jar /opentelemetry-javaagent.jar
+
 FROM eclipse-temurin:21.0.5_11-jdk-alpine AS dependencies
 
 WORKDIR /application
-
-ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.15.0/opentelemetry-javaagent.jar /application/opentelemetry-javaagent.jar
 
 COPY mvnw .
 COPY .mvn/ .mvn
@@ -20,22 +22,18 @@ COPY src /application/src
 
 RUN ./mvnw -B -e clean install -DskipTests
 
-FROM eclipse-temurin:21.0.5_11-jdk-alpine
-
-RUN apk --no-cache add curl
+FROM eclipse-temurin:21.0.7_6-jre-alpine-3.21
 
 WORKDIR /application
-
-COPY --from=builder /application/target/budgetapi-0.0.1-SNAPSHOT.jar /application/budgetapi-0.0.1-SNAPSHOT.jar
-COPY --from=builder /application/opentelemetry-javaagent.jar /application/opentelemetry-javaagent.jar
 
 RUN addgroup --system juser
 
 RUN adduser -S -s /bin/false -G juser juser
 
-RUN chown -R juser:juser /application
-
 USER juser
+
+COPY --chown=juser:juser --from=builder /application/target/budgetapi-0.0.1-SNAPSHOT.jar /application/budgetapi-0.0.1-SNAPSHOT.jar
+COPY --chown=juser:juser --from=downloader /opentelemetry-javaagent.jar /application/opentelemetry-javaagent.jar
 
 HEALTHCHECK --interval=5s --timeout=3s CMD curl --fail http://localhost:8080/api/actuator/health || exit 1
 
