@@ -37,4 +37,4 @@ COPY --chown=juser:juser --from=downloader /opentelemetry-javaagent.jar /applica
 
 HEALTHCHECK --interval=5s --timeout=3s CMD curl --fail http://localhost:8080/api/actuator/health || exit 1
 
-CMD ["java", "-XX:+UseG1GC", "-javaagent:./opentelemetry-javaagent.jar", "-Dotel.instrumentation.common.default-enabled=false", "-Dotel.instrumentation.micrometer.enabled=true", "-Dotel.instrumentation.spring-boot-actuator-autoconfigure.enabled=true", "-jar", "budgetapi-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-XX:+UseG1GC", "-javaagent:./opentelemetry-javaagent.jar", "-jar", "budgetapi-0.0.1-SNAPSHOT.jar"]
