@@ -9,6 +9,8 @@ services:
       - "5432:5432"
     volumes:
       - ./data:/var/lib/postgresql/data
+    networks:
+      - budget-network
     deploy:
       resources:
         limits:
@@ -32,3 +34,9 @@ services:
         limits:
           memory: "1024m"
           cpus: "2.0"
+    networks:
+      - budget-network
+
+networks:
+  budget-network:
+    external: true
