@@ -37,6 +37,8 @@ services:
           cpus: "2.0"
     networks:
       - budget-network
+    depends_on:
+      - db
 
 networks:
   budget-network:
