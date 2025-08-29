@@ -32,7 +32,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: "1024m"
+          memory: "2048m"
           cpus: "2.0"
     networks:
       - budget-network
