@@ -23,8 +23,12 @@ services:
       DB_HOST: budget-db
       DB_USER: postgres
       DB_PASSWORD: postgres
-      OTEL_JAVAAGENT_ENABLED: false
-      OTEL_RESOURCE_ATTRIBUTES: service.name=my-app,service.namespace=my-application-group,deployment.environment=production
+      OTEL_LOGS_EXPORTER: console
+      OTEL_METRICS_EXPORTER: console
+      OTEL_TRACES_EXPORTER: console
+      OTEL_JAVAAGENT_ENABLED: true
+      OTEL_JAVAAGENT_DEBUG: false
+      OTEL_RESOURCE_ATTRIBUTES: service.name=budget-api,service.namespace=budget-group,deployment.environment=local
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       OTEL_EXPORTER_OTLP_ENDPOINT: http://collector:4318
       JAVA_OPTS: -Xms512m -Xmx1024m
