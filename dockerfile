@@ -1,6 +1,6 @@
 FROM alpine:3.14 AS downloader
 
-ADD https://github.com/grafana/grafana-opentelemetry-java/releases/download/v2.16.0/grafana-opentelemetry-java.jar /opentelemetry-javaagent.jar
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.13.0/opentelemetry-javaagent.jar /opentelemetry-javaagent.jar
 
 FROM eclipse-temurin:21.0.5_11-jdk-alpine AS dependencies
 
