@@ -28,14 +28,15 @@ services:
       OTEL_TRACES_EXPORTER: console
       OTEL_JAVAAGENT_ENABLED: true
       OTEL_JAVAAGENT_DEBUG: false
-      OTEL_RESOURCE_ATTRIBUTES: service.name=budget-api,service.namespace=budget-group,deployment.environment=local
-      OTEL_SERVICE_NAME: budget-api
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=cogent-animal,deployment.environment=local,service.instance.id=local,telemetry.sdk.language=java
+      OTEL_SERVICE_NAME: budgetapi
       OTEL_EXPERIMENTAL_EXPORTER_OTLP_RETRY_ENABLED: true
       OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: BASE2_EXPONENTIAL_BUCKET_HISTOGRAM
       OTEL_EXPERIMENTAL_RESOURCE_DISABLED_KEYS: process.command_args
       OTEL_EXPORTER_OTLP_ENDPOINT: https://otlp.eu01.nr-data.net
       OTEL_EXPORTER_OTLP_HEADERS: api-key=${NEW_RELIC_API_KEY}
-      OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT: 4095
+      OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT: 512
+      OTEL_BSP_MAX_EXPORT_BATCH_SIZE: 128
       OTEL_EXPORTER_OTLP_COMPRESSION: gzip
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: delta
