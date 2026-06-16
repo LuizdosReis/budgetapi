@@ -39,7 +39,7 @@ services:
       OTEL_EXPORTER_OTLP_COMPRESSION: gzip
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: delta
-      JAVA_OPTS: -Xms512m -Xmx1024m
+      JAVA_TOOL_OPTIONS: -Xms64m -Xmx128m -XX:+UseSerialGC -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40 -XX:MaxMetaspaceSize=160m -XX:+MetaspaceReclaimPolicy=aggressive
     ports:
       - "8080:8080"
     deploy:
