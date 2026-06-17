@@ -35,6 +35,4 @@ USER juser
 COPY --chown=juser:juser --from=builder /application/target/budgetapi-0.0.1-SNAPSHOT.jar /application/budgetapi-0.0.1-SNAPSHOT.jar
 COPY --chown=juser:juser --from=downloader /opentelemetry-javaagent.jar /application/opentelemetry-javaagent.jar
 
-HEALTHCHECK --interval=5s --timeout=3s CMD curl --fail http://localhost:8080/api/actuator/health || exit 1
-
 ENTRYPOINT java -Dotel.semconv-stability.opt-in=database -javaagent:./opentelemetry-javaagent.jar -jar budgetapi-0.0.1-SNAPSHOT.jar "$@"
