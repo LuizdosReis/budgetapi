@@ -22,6 +22,13 @@ COPY src /application/src
 
 RUN ./mvnw -B -e clean install -DskipTests
 
+FROM eclipse-temurin:21.0.5_11-jdk-alpine AS extractor
+WORKDIR /application
+
+COPY --from=builder /application/target/budgetapi-0.0.1-SNAPSHOT.jar app.jar
+
+RUN java -Djarmode=layertools -jar app.jar extract
+
 FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /application
@@ -29,7 +36,11 @@ WORKDIR /application
 RUN useradd -ms /bin/false juser
 USER juser
 
-COPY --chown=juser:juser --from=builder /application/target/budgetapi-0.0.1-SNAPSHOT.jar /application/budgetapi-0.0.1-SNAPSHOT.jar
 COPY --chown=juser:juser --from=downloader /opentelemetry-javaagent.jar /application/opentelemetry-javaagent.jar
 
-ENTRYPOINT java -Dotel.semconv-stability.opt-in=database -javaagent:./opentelemetry-javaagent.jar -jar budgetapi-0.0.1-SNAPSHOT.jar "$@"
+COPY --chown=juser:juser --from=extractor /application/dependencies/ ./
+COPY --chown=juser:juser --from=extractor /application/spring-boot-loader/ ./
+COPY --chown=juser:juser --from=extractor /application/snapshot-dependencies/ ./
+COPY --chown=juser:juser --from=extractor /application/application/ ./
+
+ENTRYPOINT java -Dotel.semconv-stability.opt-in=database -javaagent:./opentelemetry-javaagent.jar org.springframework.boot.loader.launch.JarLauncher "$@"
