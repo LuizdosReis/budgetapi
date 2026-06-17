@@ -22,14 +22,11 @@ COPY src /application/src
 
 RUN ./mvnw -B -e clean install -DskipTests
 
-FROM eclipse-temurin:21.0.7_6-jre-alpine-3.21
+FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /application
 
-RUN addgroup --system juser
-
-RUN adduser -S -s /bin/false -G juser juser
-
+RUN useradd -ms /bin/false juser
 USER juser
 
 COPY --chown=juser:juser --from=builder /application/target/budgetapi-0.0.1-SNAPSHOT.jar /application/budgetapi-0.0.1-SNAPSHOT.jar
