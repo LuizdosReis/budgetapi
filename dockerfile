@@ -27,7 +27,7 @@ WORKDIR /application
 
 COPY --from=builder /application/target/budgetapi-0.0.1-SNAPSHOT.jar app.jar
 
-RUN java -Djarmode=layertools -jar app.jar extract
+RUN java -Djarmode=tools -jar app.jar extract --layers --destination extracted
 
 FROM eclipse-temurin:21-jre-jammy
 
@@ -38,10 +38,10 @@ USER juser
 
 COPY --chown=juser:juser --from=downloader /opentelemetry-javaagent.jar /application/opentelemetry-javaagent.jar
 
-COPY --chown=juser:juser --from=extractor /application/dependencies/ ./
-COPY --chown=juser:juser --from=extractor /application/spring-boot-loader/ ./
-COPY --chown=juser:juser --from=extractor /application/snapshot-dependencies/ ./
-COPY --chown=juser:juser --from=extractor /application/application/ ./
+COPY --chown=juser:juser --from=extractor /application/extracted/dependencies/ ./
+COPY --chown=juser:juser --from=extractor /application/extracted/spring-boot-loader/ ./
+COPY --chown=juser:juser --from=extractor /application/extracted/snapshot-dependencies/ ./
+COPY --chown=juser:juser --from=extractor /application/extracted/application/ ./
 
 ENTRYPOINT ["sh", "-c", \
     "java $JAVA_TOOL_OPTIONS \
@@ -49,5 +49,5 @@ ENTRYPOINT ["sh", "-c", \
     -XX:-FlightRecorder \
     -Dotel.semconv-stability.opt-in=database \
     -javaagent:./opentelemetry-javaagent.jar \
-    org.springframework.boot.loader.launch.JarLauncher \"$@\"" \
+    -jar app.jar org.springframework.boot.loader.launch.JarLauncher \"$@\"" \
 ]
