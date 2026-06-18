@@ -43,4 +43,11 @@ COPY --chown=juser:juser --from=extractor /application/spring-boot-loader/ ./
 COPY --chown=juser:juser --from=extractor /application/snapshot-dependencies/ ./
 COPY --chown=juser:juser --from=extractor /application/application/ ./
 
-ENTRYPOINT java -Dotel.semconv-stability.opt-in=database -javaagent:./opentelemetry-javaagent.jar org.springframework.boot.loader.launch.JarLauncher "$@"
+ENTRYPOINT ["sh", "-c", \
+    "java $JAVA_TOOL_OPTIONS \
+    -Dcom.sun.management.jmxremote=false \
+    -XX:-FlightRecorder \
+    -Dotel.semconv-stability.opt-in=database \
+    -javaagent:./opentelemetry-javaagent.jar \
+    org.springframework.boot.loader.launch.JarLauncher \"$@\"" \
+]
