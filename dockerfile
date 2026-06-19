@@ -1,6 +1,6 @@
 FROM alpine:3.14 AS downloader
 
-ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.13.0/opentelemetry-javaagent.jar /opentelemetry-javaagent.jar
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.28.1/opentelemetry-javaagent.jar /opentelemetry-javaagent.jar
 
 FROM eclipse-temurin:21.0.5_11-jdk-alpine AS dependencies
 
@@ -46,7 +46,6 @@ COPY --chown=juser:juser --from=extractor /application/extracted/application/ ./
 ENTRYPOINT ["sh", "-c", \
     "java $JAVA_TOOL_OPTIONS \
     -Dcom.sun.management.jmxremote=false \
-    -XX:-FlightRecorder \
     -Dotel.semconv-stability.opt-in=database \
     -javaagent:./opentelemetry-javaagent.jar \
     -jar app.jar org.springframework.boot.loader.launch.JarLauncher \"$@\"" \
