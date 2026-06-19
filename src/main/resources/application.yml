@@ -39,7 +39,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: info, health, metrics
+        include: info, health
 
 rsa:
   private-key: classpath:certs/private.pem
