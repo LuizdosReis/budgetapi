@@ -31,6 +31,9 @@ server:
 
 management:
   metrics:
+    enable:
+      jvm: false
+      hikaricp: true
     distribution:
       percentiles-histogram:
         http:
