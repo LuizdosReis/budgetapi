@@ -141,8 +141,8 @@ class TransactionControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /transactions/{id} returns 201 and calls save when payload is valid")
-    void put_createsAndReturns201_whenPayloadIsValid() throws Exception {
+    @DisplayName("PUT /transactions/{id} returns 200 and calls update")
+    void put_updatesAndReturns200_whenPayloadIsValid() throws Exception {
         TransactionId transactionId = new TransactionId();
         TransactionRequestDTO payload = new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
 
