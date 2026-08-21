@@ -14,6 +14,7 @@ import com.budgetapi.tag.model.Tag;
 import com.budgetapi.tag.repository.TagRepository;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
 import com.budgetapi.transaction.mapper.TransactionMapper;
+import com.budgetapi.transaction.model.Direction;
 import com.budgetapi.transaction.model.Transaction;
 import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.model.TransactionStatus;
@@ -90,7 +91,7 @@ class UpdateTransactionImplTest {
     @Test
     @DisplayName("execute should call mapper and repository")
     void execute_shouldCallMapperAndRepository() {
-        TransactionRequestDTO dto = new TransactionRequestDTO("description", accountId, categoryId, tagIds, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
+        TransactionRequestDTO dto = new TransactionRequestDTO("description", accountId, categoryId, tagIds, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
         Transaction transaction = TransactionFactory.create(account, category);
 
         when(accountRepository.findByIdAndUser(accountId, user)).thenReturn(Optional.of(account));
@@ -107,7 +108,7 @@ class UpdateTransactionImplTest {
     @Test
     @DisplayName("execute should throw NotFoundException when account is not found ")
     void execute_shouldThrowNotFoundException_whenAccountIsNotFound() {
-        TransactionRequestDTO dto = new TransactionRequestDTO("description", accountId, categoryId, tagIds, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
+        TransactionRequestDTO dto = new TransactionRequestDTO("description", accountId, categoryId, tagIds, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
 
         when(accountRepository.findByIdAndUser(accountId, user)).thenReturn(Optional.empty());
 
@@ -121,7 +122,7 @@ class UpdateTransactionImplTest {
     @Test
     @DisplayName("execute should throw NotFoundException when category is not found ")
     void execute_shouldThrowNotFoundException_whenCategoryIsNotFound() {
-        TransactionRequestDTO dto = new TransactionRequestDTO("description", accountId, categoryId, tagIds, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
+        TransactionRequestDTO dto = new TransactionRequestDTO("description", accountId, categoryId, tagIds, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
 
         when(accountRepository.findByIdAndUser(accountId, user)).thenReturn(Optional.of(account));
         when(categoryRepository.findByIdAndUser(categoryId, user)).thenReturn(Optional.empty());
@@ -138,7 +139,7 @@ class UpdateTransactionImplTest {
         UUID notFoundTagId = UUID.randomUUID();
         Set<UUID> notFoundTagIds = Set.of(notFoundTagId, tagId);
 
-        TransactionRequestDTO dto = new TransactionRequestDTO("description", accountId, categoryId, notFoundTagIds, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
+        TransactionRequestDTO dto = new TransactionRequestDTO("description", accountId, categoryId, notFoundTagIds, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
 
         when(accountRepository.findByIdAndUser(accountId, user)).thenReturn(Optional.of(account));
         when(categoryRepository.findByIdAndUser(categoryId, user)).thenReturn(Optional.of(category));
@@ -153,7 +154,7 @@ class UpdateTransactionImplTest {
     @Test
     @DisplayName("execute should throw NotFoundException when transaction is not found ")
     void execute_shouldThrowNotFoundException_whenTransactionIsNotFound() {
-        TransactionRequestDTO dto = new TransactionRequestDTO("description", accountId, categoryId, tagIds, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
+        TransactionRequestDTO dto = new TransactionRequestDTO("description", accountId, categoryId, tagIds, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
         TransactionId transactionId = new TransactionId();
 
         when(accountRepository.findByIdAndUser(accountId, user)).thenReturn(Optional.of(account));

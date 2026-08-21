@@ -14,6 +14,7 @@ import com.budgetapi.transaction.dto.TagDTO;
 import com.budgetapi.transaction.dto.TransactionDTO;
 import com.budgetapi.transaction.dto.TransactionSearchCriteria;
 import com.budgetapi.transaction.mapper.TransactionMapper;
+import com.budgetapi.transaction.model.Direction;
 import com.budgetapi.transaction.model.Transaction;
 import com.budgetapi.transaction.repository.TransactionRepository;
 import com.budgetapi.transaction.services.SearchTransactionsImpl;
@@ -75,7 +76,7 @@ class SearchTransactionsImplTest {
         AccountDTO accountDTO = new AccountDTO(account.getId(), account.getName(), account.getCurrency());
         CategoryDTO categoryDTO = new CategoryDTO(category.getId(), category.getName(), category.getType().name());
         TagDTO tagDTO = new TagDTO(tag.getId(), tag.getName());
-        TransactionDTO dto = new TransactionDTO("description", accountDTO, categoryDTO, Set.of(tagDTO), BigDecimal.TEN, transaction.getId().id(), transaction.getDate(), transaction.getStatus(), transaction.isDeleted());
+        TransactionDTO dto = new TransactionDTO("description", accountDTO, categoryDTO, Set.of(tagDTO), BigDecimal.TEN, transaction.getId().id(), transaction.getDate(), transaction.getStatus(), transaction.isDeleted(), Direction.OUT);
 
         when(repository.findAllBy(criteria, user, pageRequest)).thenReturn(new PageImpl<>(List.of(transaction)));
         when(mapper.toDTO(transaction)).thenReturn(dto);

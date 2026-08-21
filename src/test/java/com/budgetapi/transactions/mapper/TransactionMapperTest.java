@@ -12,6 +12,7 @@ import com.budgetapi.transaction.dto.TagDTO;
 import com.budgetapi.transaction.dto.TransactionDTO;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
 import com.budgetapi.transaction.mapper.TransactionMapper;
+import com.budgetapi.transaction.model.Direction;
 import com.budgetapi.transaction.model.Transaction;
 import com.budgetapi.transaction.model.TransactionStatus;
 import com.budgetapi.user.model.User;
@@ -37,7 +38,7 @@ class TransactionMapperTest {
     @Test
     @DisplayName("toModel should create tag with correct fields")
     void toModel_shouldCreateTransactionWithCorrectFields() {
-        TransactionRequestDTO dto = new TransactionRequestDTO("transaction", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
+        TransactionRequestDTO dto = new TransactionRequestDTO("transaction", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
 
         Transaction transaction = TransactionMapper.MAPPER.toModel(dto, account, category, Set.of(tag));
 
@@ -49,12 +50,13 @@ class TransactionMapperTest {
         assertThat(transaction.getTags()).isEqualTo(Set.of(tag));
         assertThat(transaction.getStatus()).isEqualTo(dto.status());
         assertThat(transaction.isDeleted()).isFalse();
+        assertThat(transaction.getDirection()).isEqualTo(dto.direction());
     }
 
     @Test
     @DisplayName("updateModel should update with correct fields")
     void updateModel_shouldUpdateWithCorrectFields() {
-        TransactionRequestDTO dto = new TransactionRequestDTO("transaction", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.of(2022, Month.DECEMBER, 12), TransactionStatus.SCHEDULED);
+        TransactionRequestDTO dto = new TransactionRequestDTO("transaction", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.of(2022, Month.DECEMBER, 12), TransactionStatus.SCHEDULED, Direction.OUT);
         Transaction transaction = TransactionFactory.create(account, category);
 
         Account newAccount = AccountFactory.createAccount(user);
@@ -92,5 +94,6 @@ class TransactionMapperTest {
         assertThat(dto.tags()).isEqualTo(Set.of(new TagDTO(tag.getId(), tag.getName())));
         assertThat(dto.status()).isEqualTo(transaction.getStatus());
         assertThat(dto.deleted()).isEqualTo(transaction.isDeleted());
+        assertThat(dto.direction()).isEqualTo(transaction.getDirection());
     }
 }

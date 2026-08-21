@@ -1,5 +1,6 @@
 package com.budgetapi.transaction.dto;
 
+import com.budgetapi.transaction.model.Direction;
 import com.budgetapi.transaction.model.TransactionStatus;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
@@ -23,6 +24,8 @@ public record TransactionRequestDTO(@NotNull(message = "Description cannot be nu
                                     @NotNull(message = "Date cannot be null")
                                     LocalDate date,
                                     @NotNull(message = "Status cannot be null")
-                                    TransactionStatus status
+                                    TransactionStatus status,
+                                    @NotNull(message = "Direction cannot be null")
+                                    Direction direction
 ) {
 }

@@ -15,6 +15,7 @@ import com.budgetapi.tag.model.Tag;
 import com.budgetapi.tag.repository.TagRepository;
 import com.budgetapi.transaction.controller.TransactionController;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
+import com.budgetapi.transaction.model.Direction;
 import com.budgetapi.transaction.model.Transaction;
 import com.budgetapi.transaction.model.TransactionStatus;
 import com.budgetapi.transaction.repository.TransactionRepository;
@@ -91,7 +92,7 @@ class TransactionControllerITest {
     @Test
     @DisplayName("POST /transactions returns 201")
     void post_createsAndReturns201_whenPayloadIsValid() throws Exception {
-        TransactionRequestDTO payload = new TransactionRequestDTO("description", account.getId(), category.getId(), Set.of(tag.getId()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
+        TransactionRequestDTO payload = new TransactionRequestDTO("description", account.getId(), category.getId(), Set.of(tag.getId()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
 
         this.mockMvc.perform(post(TransactionController.BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -111,13 +112,14 @@ class TransactionControllerITest {
         assertThat(transaction.getStatus()).isEqualTo(payload.status());
         assertThat(transaction.getCreateDate()).isNotNull();
         assertThat(transaction.getModifiedDate()).isNull();
+        assertThat(transaction.getDirection()).isEqualTo(payload.direction());
     }
 
     @Test
     @DisplayName("PUT /transactions/{id} returns 200")
-    void put_createsAndReturns200_whenPayloadIsValid() throws Exception {
-        Transaction transaction = transactionRepository.save(TransactionFactory.create(account, category));
-        TransactionRequestDTO payload = new TransactionRequestDTO("updateddescription", account.getId(), category.getId(), Set.of(tag.getId()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
+    void put_updatesAndReturns200_whenPayloadIsValid() throws Exception {
+        Transaction transaction = transactionRepository.save(TransactionFactory.create(account, category, c -> c.tags(Set.of(tag))));
+        TransactionRequestDTO payload = new TransactionRequestDTO("updateddescription", account.getId(), category.getId(), Set.of(tag.getId()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
 
         this.mockMvc.perform(put(TransactionController.BASE_URL + "/" + transaction.getId().id())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -137,6 +139,7 @@ class TransactionControllerITest {
         assertThat(updatedTransaction.getStatus()).isEqualTo(payload.status());
         assertThat(updatedTransaction.getCreateDate()).isCloseTo(transaction.getCreateDate(), byLessThan(1, ChronoUnit.MICROS));
         assertThat(updatedTransaction.getModifiedDate()).isNotNull();
+        assertThat(updatedTransaction.getDirection()).isEqualTo(payload.direction());
     }
 
     @Test
@@ -155,7 +158,7 @@ class TransactionControllerITest {
     @Test
     @DisplayName("GET /transactions returns 200 with page")
     void get_returns200WithPage() throws Exception {
-        Transaction transaction = transactionRepository.save(TransactionFactory.create(account, category));
+        Transaction transaction = transactionRepository.save(TransactionFactory.create(account, category, c -> c.tags(Set.of(tag))));
 
         this.mockMvc.perform(get(TransactionController.BASE_URL)
                         .param("searchTerm", "description")

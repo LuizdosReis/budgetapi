@@ -1,5 +1,6 @@
 package com.budgetapi.transaction.dto;
 
+import com.budgetapi.transaction.model.Direction;
 import com.budgetapi.transaction.model.TransactionStatus;
 
 import java.math.BigDecimal;
@@ -15,5 +16,6 @@ public record TransactionDTO(String description,
                              UUID id,
                              LocalDate date,
                              TransactionStatus status,
-                             boolean deleted) {
+                             boolean deleted,
+                             Direction direction) {
 }

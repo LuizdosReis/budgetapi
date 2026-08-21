@@ -2,6 +2,7 @@ package com.budgetapi.factories;
 
 import com.budgetapi.account.model.Account;
 import com.budgetapi.category.model.Category;
+import com.budgetapi.transaction.model.Direction;
 import com.budgetapi.transaction.model.Transaction;
 import com.budgetapi.transaction.model.TransactionStatus;
 import lombok.experimental.UtilityClass;
@@ -31,7 +32,8 @@ public class TransactionFactory {
                 .amount(DEFAULT_AMOUNT)
                 .date(LocalDate.of(2019, Month.OCTOBER, 9))
                 .status(TransactionStatus.REGISTERED)
-                .tags(Set.of());
+                .tags(Set.of())
+                .direction(Direction.OUT);
 
         customizer.accept(builder);
 

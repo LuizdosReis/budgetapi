@@ -8,6 +8,7 @@ import com.budgetapi.transaction.dto.CategoryDTO;
 import com.budgetapi.transaction.dto.TransactionDTO;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
 import com.budgetapi.transaction.dto.TransactionSearchCriteria;
+import com.budgetapi.transaction.model.Direction;
 import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.model.TransactionStatus;
 import com.budgetapi.transaction.services.CreateTransaction;
@@ -80,7 +81,7 @@ class TransactionControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("POST /transactions returns 201 and calls save when payload is valid")
     void post_createsAndReturns201_whenPayloadIsValid() throws Exception {
-        TransactionRequestDTO payload = new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
+        TransactionRequestDTO payload = new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
 
         this.mockMvc.perform(post(TransactionController.BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -109,16 +110,17 @@ class TransactionControllerTest extends AbstractControllerTest {
 
     private static Stream<Arguments> invalidTransactionsRequestDTOs() {
         return Stream.of(
-                Arguments.of(new TransactionRequestDTO("", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED), "Description must be between 5 and 50 characters", "description", ""),
-                Arguments.of(new TransactionRequestDTO("a", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED), "Description must be between 5 and 50 characters", "description", "a"),
-                Arguments.of(new TransactionRequestDTO("a".repeat(51), UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED), "Description must be between 5 and 50 characters", "description", "a".repeat(51)),
-                Arguments.of(new TransactionRequestDTO(null, UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED), "Description cannot be null", "description", null),
-                Arguments.of(new TransactionRequestDTO("description", null, UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED), "AccountId cannot be null", "accountId", null),
-                Arguments.of(new TransactionRequestDTO("description", UUID.randomUUID(), null, Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED), "CategoryId cannot be null", "categoryId", null),
-                Arguments.of(new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), null, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED), "TagIds cannot be null", "tagIds", null),
-                Arguments.of(new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), null, LocalDate.now(), TransactionStatus.REGISTERED), "Amount cannot be null", "amount", null),
-                Arguments.of(new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, null, TransactionStatus.REGISTERED), "Date cannot be null", "date", null),
-                Arguments.of(new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), null), "Status cannot be null", "status", null)
+                Arguments.of(new TransactionRequestDTO("", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT), "Description must be between 5 and 50 characters", "description", ""),
+                Arguments.of(new TransactionRequestDTO("a", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT), "Description must be between 5 and 50 characters", "description", "a"),
+                Arguments.of(new TransactionRequestDTO("a".repeat(51), UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT), "Description must be between 5 and 50 characters", "description", "a".repeat(51)),
+                Arguments.of(new TransactionRequestDTO(null, UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT), "Description cannot be null", "description", null),
+                Arguments.of(new TransactionRequestDTO("description", null, UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT), "AccountId cannot be null", "accountId", null),
+                Arguments.of(new TransactionRequestDTO("description", UUID.randomUUID(), null, Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT), "CategoryId cannot be null", "categoryId", null),
+                Arguments.of(new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), null, BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT), "TagIds cannot be null", "tagIds", null),
+                Arguments.of(new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), null, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT), "Amount cannot be null", "amount", null),
+                Arguments.of(new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, null, TransactionStatus.REGISTERED, Direction.OUT), "Date cannot be null", "date", null),
+                Arguments.of(new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), null, Direction.OUT), "Status cannot be null", "status", null),
+                Arguments.of(new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, null), "Direction cannot be null", "direction", null)
         );
     }
 
@@ -131,9 +133,9 @@ class TransactionControllerTest extends AbstractControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", is("Field Validation Errors")))
                 .andExpect(jsonPath("$.timestamp", notNullValue()))
-                .andExpect(jsonPath("$.fieldErrors[*].field", containsInAnyOrder("description", "accountId", "categoryId", "tagIds", "amount", "date", "status")))
-                .andExpect(jsonPath("$.fieldErrors[*].message", containsInAnyOrder("Description cannot be null", "AccountId cannot be null", "CategoryId cannot be null", "TagIds cannot be null", "Amount cannot be null", "Date cannot be null", "Status cannot be null")))
-                .andExpect(jsonPath("$.fieldErrors[*].rejectedValue", contains(null, null, null, null, null, null, null)));
+                .andExpect(jsonPath("$.fieldErrors[*].field", containsInAnyOrder("description", "accountId", "categoryId", "tagIds", "amount", "date", "status", "direction")))
+                .andExpect(jsonPath("$.fieldErrors[*].message", containsInAnyOrder("Description cannot be null", "AccountId cannot be null", "CategoryId cannot be null", "TagIds cannot be null", "Amount cannot be null", "Date cannot be null", "Status cannot be null", "Direction cannot be null")))
+                .andExpect(jsonPath("$.fieldErrors[*].rejectedValue", contains(null, null, null, null, null, null, null, null)));
 
         verifyNoInteractions(createTransaction);
     }
@@ -142,7 +144,7 @@ class TransactionControllerTest extends AbstractControllerTest {
     @DisplayName("PUT /transactions/{id} returns 201 and calls save when payload is valid")
     void put_createsAndReturns201_whenPayloadIsValid() throws Exception {
         TransactionId transactionId = new TransactionId();
-        TransactionRequestDTO payload = new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED);
+        TransactionRequestDTO payload = new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
 
         this.mockMvc.perform(put(TransactionController.BASE_URL + "/" + transactionId.id())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -178,9 +180,9 @@ class TransactionControllerTest extends AbstractControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", is("Field Validation Errors")))
                 .andExpect(jsonPath("$.timestamp", notNullValue()))
-                .andExpect(jsonPath("$.fieldErrors[*].field", containsInAnyOrder("description", "accountId", "categoryId", "tagIds", "amount", "date", "status")))
-                .andExpect(jsonPath("$.fieldErrors[*].message", containsInAnyOrder("Description cannot be null", "AccountId cannot be null", "CategoryId cannot be null", "TagIds cannot be null", "Amount cannot be null", "Date cannot be null", "Status cannot be null")))
-                .andExpect(jsonPath("$.fieldErrors[*].rejectedValue", contains(null, null, null, null, null, null, null)));
+                .andExpect(jsonPath("$.fieldErrors[*].field", containsInAnyOrder("description", "accountId", "categoryId", "tagIds", "amount", "date", "status", "direction")))
+                .andExpect(jsonPath("$.fieldErrors[*].message", containsInAnyOrder("Description cannot be null", "AccountId cannot be null", "CategoryId cannot be null", "TagIds cannot be null", "Amount cannot be null", "Date cannot be null", "Status cannot be null", "Direction cannot be null")))
+                .andExpect(jsonPath("$.fieldErrors[*].rejectedValue", contains(null, null, null, null, null, null, null, null)));
 
         verifyNoInteractions(createTransaction);
     }
@@ -243,7 +245,7 @@ class TransactionControllerTest extends AbstractControllerTest {
         TransactionId transactionId = new TransactionId();
         AccountDTO account = new AccountDTO(UUID.randomUUID(), "account", "BRL");
         CategoryDTO category = new CategoryDTO(UUID.randomUUID(), "category", "type");
-        TransactionDTO transaction = new TransactionDTO("description", account, category, Set.of(), BigDecimal.TEN, transactionId.id(), LocalDate.now(), TransactionStatus.REGISTERED, false);
+        TransactionDTO transaction = new TransactionDTO("description", account, category, Set.of(), BigDecimal.TEN, transactionId.id(), LocalDate.now(), TransactionStatus.REGISTERED, false, Direction.OUT);
 
         when(getTransaction.execute(transactionId)).thenReturn(transaction);
 
@@ -261,7 +263,8 @@ class TransactionControllerTest extends AbstractControllerTest {
                 .andExpect(jsonPath("$.amount").value(transaction.amount()))
                 .andExpect(jsonPath("$.date").value(transaction.date().toString()))
                 .andExpect(jsonPath("$.status").value(transaction.status().name()))
-                .andExpect(jsonPath("$.deleted").value(transaction.deleted()));
+                .andExpect(jsonPath("$.deleted").value(transaction.deleted()))
+                .andExpect(jsonPath("$.direction").value(transaction.direction().name()));
     }
 
     @Test

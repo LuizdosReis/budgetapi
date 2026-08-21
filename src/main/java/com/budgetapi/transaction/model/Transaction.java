@@ -73,14 +73,19 @@ public class Transaction extends AbstractAuditable implements Serializable {
 
     private LocalDate date;
 
+    @NotNull
     @Enumerated(value = EnumType.STRING)
     private TransactionStatus status = TransactionStatus.REGISTERED;
+
+    @NotNull
+    @Enumerated(value = EnumType.STRING)
+    private Direction direction;
 
     @Getter
     private boolean deleted = Boolean.FALSE;
 
     @Builder
-    private Transaction(String description, Account account, Category category, Set<Tag> tags, BigDecimal amount, LocalDate date, TransactionStatus status, boolean deleted) {
+    private Transaction(String description, Account account, Category category, Set<Tag> tags, BigDecimal amount, LocalDate date, TransactionStatus status, boolean deleted, Direction direction) {
         this.id = new TransactionId();
         this.description = new Description(description);
         this.setAccount(account);
@@ -90,6 +95,7 @@ public class Transaction extends AbstractAuditable implements Serializable {
         this.setDate(date);
         this.setStatus(status);
         this.deleted = deleted;
+        this.setDirection(direction);
     }
 
     public void setTags(Set<Tag> tags) {
@@ -134,5 +140,14 @@ public class Transaction extends AbstractAuditable implements Serializable {
 
     public String getDescription() {
         return this.description.value();
+    }
+
+    public void setDirection(Direction direction) {
+        Assert.notNull(direction, "Direction must not be null");
+        this.direction = direction;
+    }
+
+    public Direction getDirection() {
+        return direction;
     }
 }

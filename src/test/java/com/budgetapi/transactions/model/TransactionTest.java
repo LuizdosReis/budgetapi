@@ -7,6 +7,7 @@ import com.budgetapi.factories.CategoryFactory;
 import com.budgetapi.factories.TagFactory;
 import com.budgetapi.factories.UserFactory;
 import com.budgetapi.tag.model.Tag;
+import com.budgetapi.transaction.model.Direction;
 import com.budgetapi.transaction.model.Transaction;
 import com.budgetapi.transaction.model.TransactionStatus;
 import com.budgetapi.user.model.User;
@@ -30,6 +31,7 @@ class TransactionTest {
     private final BigDecimal amount = BigDecimal.valueOf(100);
     private final LocalDate date = LocalDate.now();
     private final TransactionStatus status = TransactionStatus.REGISTERED;
+    private final Direction direction = Direction.OUT;
 
     @Test
     @DisplayName("Create Transaction")
@@ -42,6 +44,7 @@ class TransactionTest {
                 .date(date)
                 .status(status)
                 .tags(tags)
+                .direction(direction)
                 .build();
         assertThat(transaction.getDescription()).isEqualTo(description);
         assertThat(transaction.getAccount()).isEqualTo(account);
@@ -51,6 +54,7 @@ class TransactionTest {
         assertThat(transaction.getDate()).isEqualTo(date);
         assertThat(transaction.getStatus()).isEqualTo(status);
         assertThat(transaction.isDeleted()).isFalse();
+        assertThat(transaction.getDirection()).isEqualTo(direction);
     }
 
     @Test
@@ -63,6 +67,7 @@ class TransactionTest {
                 .date(date)
                 .status(status)
                 .tags(tags)
+                .direction(direction)
                 .build());
         assertThat(exception.getMessage()).contains("Description must have text");
     }
@@ -77,6 +82,7 @@ class TransactionTest {
                 .date(date)
                 .status(status)
                 .tags(tags)
+                .direction(direction)
                 .build());
         assertThat(exception.getMessage()).contains("Account must not be null");
     }
@@ -91,6 +97,7 @@ class TransactionTest {
                 .date(date)
                 .status(status)
                 .tags(tags)
+                .direction(direction)
                 .build());
         assertThat(exception.getMessage()).contains("Category must not be null");
     }
@@ -105,6 +112,7 @@ class TransactionTest {
                 .amount(amount)
                 .date(date)
                 .status(status)
+                .direction(direction)
                 .build());
         assertThat(exception.getMessage()).contains("Tags must not be null");
     }
@@ -119,6 +127,7 @@ class TransactionTest {
                 .date(date)
                 .status(status)
                 .tags(tags)
+                .direction(direction)
                 .build());
         assertThat(exception.getMessage()).contains("Amount must not be null");
     }
@@ -133,6 +142,7 @@ class TransactionTest {
                 .amount(amount)
                 .status(status)
                 .tags(tags)
+                .direction(direction)
                 .build());
         assertThat(exception.getMessage()).contains("Date must not be null");
     }
@@ -147,8 +157,24 @@ class TransactionTest {
                 .amount(amount)
                 .date(date)
                 .tags(tags)
+                .direction(direction)
                 .build());
         assertThat(exception.getMessage()).contains("Status must not be null");
+    }
+
+    @Test
+    @DisplayName("Do not create transaction with null status")
+    void doNotCreateTransactionWithNullDirection() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> Transaction.builder()
+                .description(description)
+                .account(account)
+                .category(category)
+                .amount(amount)
+                .date(date)
+                .tags(tags)
+                .status(status)
+                .build());
+        assertThat(exception.getMessage()).contains("Direction must not be null");
     }
 
     @Test
@@ -164,6 +190,7 @@ class TransactionTest {
                 .date(date)
                 .status(status)
                 .tags(tags)
+                .direction(direction)
                 .build());
         assertThat(exception.getMessage()).contains("Account user is not the same as category user");
     }
@@ -183,6 +210,7 @@ class TransactionTest {
                 .date(date)
                 .status(status)
                 .tags(otherUserTags)
+                .direction(direction)
                 .build());
         assertThat(exception.getMessage()).contains("Tags user is not the same as account user");
     }
@@ -198,6 +226,7 @@ class TransactionTest {
                 .date(date)
                 .tags(Set.of())
                 .status(status)
+                .direction(direction)
                 .build();
         assertThat(transaction).isNotNull();
     }

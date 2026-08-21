@@ -11,6 +11,7 @@ import com.budgetapi.transaction.dto.AccountDTO;
 import com.budgetapi.transaction.dto.CategoryDTO;
 import com.budgetapi.transaction.dto.TransactionDTO;
 import com.budgetapi.transaction.mapper.TransactionMapper;
+import com.budgetapi.transaction.model.Direction;
 import com.budgetapi.transaction.model.Transaction;
 import com.budgetapi.transaction.model.TransactionId;
 import com.budgetapi.transaction.repository.TransactionRepository;
@@ -67,7 +68,7 @@ class GetTransactionImplTest {
 
         AccountDTO accountDTO = new AccountDTO(account.getId(), account.getName(), account.getCurrency());
         CategoryDTO categoryDTO = new CategoryDTO(category.getId(), category.getName(), category.getType().name());
-        TransactionDTO dto = new TransactionDTO("description", accountDTO, categoryDTO, Set.of(), BigDecimal.TEN, transaction.getId().id(), transaction.getDate(), transaction.getStatus(), transaction.isDeleted());
+        TransactionDTO dto = new TransactionDTO("description", accountDTO, categoryDTO, Set.of(), BigDecimal.TEN, transaction.getId().id(), transaction.getDate(), transaction.getStatus(), transaction.isDeleted(), Direction.OUT);
         when(repository.findByIdAndAccountUser(transaction.getId(), user)).thenReturn(Optional.of(transaction));
         when(mapper.toDTO(transaction)).thenReturn(dto);
 
