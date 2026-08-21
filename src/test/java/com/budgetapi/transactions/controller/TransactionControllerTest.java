@@ -155,7 +155,7 @@ class TransactionControllerTest extends AbstractControllerTest {
     }
 
     @ParameterizedTest
-    @DisplayName("PUT /transactions/{id} return 400 bad request and do not calls save when payload is invalid")
+    @DisplayName("PUT /transactions/{id} returns 400 bad request and does not call update when payload is invalid")
     @MethodSource("invalidTransactionsRequestDTOs")
     void put_doNotSaveAndReturns400_whenPayloadIsInvalid(TransactionRequestDTO payload, String fieldErrorMessage, String field, Object value) throws Exception {
         this.mockMvc.perform(put(TransactionController.BASE_URL + "/" + UUID.randomUUID())
@@ -184,7 +184,7 @@ class TransactionControllerTest extends AbstractControllerTest {
                 .andExpect(jsonPath("$.fieldErrors[*].message", containsInAnyOrder("Description cannot be null", "AccountId cannot be null", "CategoryId cannot be null", "TagIds cannot be null", "Amount cannot be null", "Date cannot be null", "Status cannot be null", "Direction cannot be null")))
                 .andExpect(jsonPath("$.fieldErrors[*].rejectedValue", contains(null, null, null, null, null, null, null, null)));
 
-        verifyNoInteractions(createTransaction);
+        verifyNoInteractions(updateTransaction);
     }
 
     @Test
