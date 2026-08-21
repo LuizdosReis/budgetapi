@@ -5,6 +5,7 @@ import com.budgetapi.erro.NotFoundException;
 import com.budgetapi.transaction.controller.TransactionController;
 import com.budgetapi.transaction.dto.AccountDTO;
 import com.budgetapi.transaction.dto.CategoryDTO;
+import com.budgetapi.transaction.dto.TagDTO;
 import com.budgetapi.transaction.dto.TransactionDTO;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
 import com.budgetapi.transaction.dto.TransactionSearchCriteria;
@@ -24,6 +25,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -33,14 +36,17 @@ import org.springframework.util.MultiValueMap;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -213,15 +219,23 @@ class TransactionControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("GET /transactions returns 200 OK and calls searchTransactions")
     void get_return200AndCallSearchTransaction() throws Exception {
+        AccountDTO account = new AccountDTO(UUID.randomUUID(), "account", "BRL");
+        TagDTO tag = new TagDTO(UUID.randomUUID(), "tag");
+        TagDTO tag2 = new TagDTO(UUID.randomUUID(), "tag2");
+        CategoryDTO category = new CategoryDTO(UUID.randomUUID(), "category", "type");
+
         TransactionSearchCriteria criteria = TransactionSearchCriteria.builder()
                 .nonDeleted(true)
                 .searchTerm("trans")
-                .tagIds(Set.of(UUID.randomUUID(), UUID.randomUUID()))
-                .accountIds(Set.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()))
-                .categoryIds(Set.of(UUID.randomUUID()))
+                .tagIds(Set.of(tag.id(), tag2.id()))
+                .accountIds(Set.of(account.id()))
+                .categoryIds(Set.of(category.id()))
                 .sinceDate(LocalDate.now())
                 .untilDate(LocalDate.now())
                 .build();
+        TransactionDTO transaction = new TransactionDTO("description", account, category, Set.of(tag, tag2), BigDecimal.TEN, UUID.randomUUID(), LocalDate.now(), TransactionStatus.REGISTERED, false, Direction.OUT);
+        Page<TransactionDTO> pageResponse = new PageImpl<>(List.of(transaction), PageRequest.of(0, 20), 1);
+        when(searchTransactions.execute(eq(criteria), eq(PageRequest.of(0, 20)))).thenReturn(pageResponse);
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("searchTerm", criteria.searchTerm());
@@ -234,7 +248,23 @@ class TransactionControllerTest extends AbstractControllerTest {
 
         this.mockMvc.perform(get(TransactionController.BASE_URL)
                         .params(params))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].id").value(transaction.id().toString()))
+                .andExpect(jsonPath("$.content[0].description").value(transaction.description()))
+                .andExpect(jsonPath("$.content[0].account.id").value(account.id().toString()))
+                .andExpect(jsonPath("$.content[0].account.name").value(account.name()))
+                .andExpect(jsonPath("$.content[0].account.currency").value(account.currency()))
+                .andExpect(jsonPath("$.content[0].category.id").value(category.id().toString()))
+                .andExpect(jsonPath("$.content[0].category.name").value(category.name()))
+                .andExpect(jsonPath("$.content[0].category.type").value(category.type()))
+                .andExpect(jsonPath("$.content[0].tags", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].tags[*].id", containsInAnyOrder(tag.id().toString(), tag2.id().toString())))
+                .andExpect(jsonPath("$.content[0].tags[*].name", containsInAnyOrder(tag.name(), tag2.name())))
+                .andExpect(jsonPath("$.content[0].amount").value(transaction.amount()))
+                .andExpect(jsonPath("$.content[0].date").value(transaction.date().toString()))
+                .andExpect(jsonPath("$.content[0].status").value(transaction.status().name()))
+                .andExpect(jsonPath("$.content[0].deleted").value(transaction.deleted()));
 
         verify(searchTransactions, times(1)).execute(criteria, PageRequest.of(0, 20));
     }
