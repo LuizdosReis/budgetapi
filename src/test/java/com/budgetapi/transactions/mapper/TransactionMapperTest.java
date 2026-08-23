@@ -12,18 +12,13 @@ import com.budgetapi.transaction.dto.TagDTO;
 import com.budgetapi.transaction.dto.TransactionDTO;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
 import com.budgetapi.transaction.mapper.TransactionMapper;
-import com.budgetapi.transaction.model.Direction;
 import com.budgetapi.transaction.model.Transaction;
-import com.budgetapi.transaction.model.TransactionStatus;
+import com.budgetapi.transactions.factories.TransactionRequestDTOFactory;
 import com.budgetapi.user.model.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.Month;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,7 +33,7 @@ class TransactionMapperTest {
     @Test
     @DisplayName("toModel should create tag with correct fields")
     void toModel_shouldCreateTransactionWithCorrectFields() {
-        TransactionRequestDTO dto = new TransactionRequestDTO("transaction", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
+        TransactionRequestDTO dto = TransactionRequestDTOFactory.create();
 
         Transaction transaction = TransactionMapper.MAPPER.toModel(dto, account, category, Set.of(tag));
 
@@ -56,7 +51,7 @@ class TransactionMapperTest {
     @Test
     @DisplayName("updateModel should update with correct fields")
     void updateModel_shouldUpdateWithCorrectFields() {
-        TransactionRequestDTO dto = new TransactionRequestDTO("transaction", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.of(2022, Month.DECEMBER, 12), TransactionStatus.SCHEDULED, Direction.OUT);
+        TransactionRequestDTO dto = TransactionRequestDTOFactory.create();
         Transaction transaction = TransactionFactory.create(account, category);
 
         Account newAccount = AccountFactory.createAccount(user);

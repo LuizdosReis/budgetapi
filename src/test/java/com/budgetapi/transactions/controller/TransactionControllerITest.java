@@ -15,10 +15,9 @@ import com.budgetapi.tag.model.Tag;
 import com.budgetapi.tag.repository.TagRepository;
 import com.budgetapi.transaction.controller.TransactionController;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
-import com.budgetapi.transaction.model.Direction;
 import com.budgetapi.transaction.model.Transaction;
-import com.budgetapi.transaction.model.TransactionStatus;
 import com.budgetapi.transaction.repository.TransactionRepository;
+import com.budgetapi.transactions.factories.TransactionRequestDTOFactory;
 import com.budgetapi.user.model.User;
 import com.budgetapi.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,8 +31,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Set;
@@ -92,7 +89,12 @@ class TransactionControllerITest {
     @Test
     @DisplayName("POST /transactions returns 201")
     void post_createsAndReturns201_whenPayloadIsValid() throws Exception {
-        TransactionRequestDTO payload = new TransactionRequestDTO("description", account.getId(), category.getId(), Set.of(tag.getId()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
+        TransactionRequestDTO payload = TransactionRequestDTOFactory
+                .create(c -> c.description("updateddescription")
+                        .accountID(account.getId())
+                        .categoryID(category.getId())
+                        .tagIDs(Set.of(tag.getId()))
+                );
 
         this.mockMvc.perform(post(TransactionController.BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -119,7 +121,13 @@ class TransactionControllerITest {
     @DisplayName("PUT /transactions/{id} returns 200")
     void put_updatesAndReturns200_whenPayloadIsValid() throws Exception {
         Transaction transaction = transactionRepository.save(TransactionFactory.create(account, category, c -> c.tags(Set.of(tag))));
-        TransactionRequestDTO payload = new TransactionRequestDTO("updateddescription", account.getId(), category.getId(), Set.of(tag.getId()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
+        TransactionRequestDTO payload = TransactionRequestDTOFactory
+                .create(c -> c.description("updateddescription")
+                        .accountID(account.getId())
+                        .categoryID(category.getId())
+                        .tagIDs(Set.of(tag.getId()))
+                );
+
 
         this.mockMvc.perform(put(TransactionController.BASE_URL + "/" + transaction.getId().id())
                         .contentType(MediaType.APPLICATION_JSON)

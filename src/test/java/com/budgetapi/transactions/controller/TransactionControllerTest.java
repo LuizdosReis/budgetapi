@@ -3,8 +3,6 @@ package com.budgetapi.transactions.controller;
 import com.budgetapi.AbstractControllerTest;
 import com.budgetapi.erro.NotFoundException;
 import com.budgetapi.transaction.controller.TransactionController;
-import com.budgetapi.transaction.dto.AccountDTO;
-import com.budgetapi.transaction.dto.CategoryDTO;
 import com.budgetapi.transaction.dto.TagDTO;
 import com.budgetapi.transaction.dto.TransactionDTO;
 import com.budgetapi.transaction.dto.TransactionRequestDTO;
@@ -17,6 +15,8 @@ import com.budgetapi.transaction.services.DeleteTransaction;
 import com.budgetapi.transaction.services.GetTransaction;
 import com.budgetapi.transaction.services.SearchTransactions;
 import com.budgetapi.transaction.services.UpdateTransaction;
+import com.budgetapi.transactions.factories.TransactionDTOFactory;
+import com.budgetapi.transactions.factories.TransactionRequestDTOFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,6 +39,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.contains;
@@ -87,7 +88,7 @@ class TransactionControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("POST /transactions returns 201 and calls save when payload is valid")
     void post_createsAndReturns201_whenPayloadIsValid() throws Exception {
-        TransactionRequestDTO payload = new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
+        TransactionRequestDTO payload = TransactionRequestDTOFactory.create();
 
         this.mockMvc.perform(post(TransactionController.BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -150,7 +151,7 @@ class TransactionControllerTest extends AbstractControllerTest {
     @DisplayName("PUT /transactions/{id} returns 200 and calls update")
     void put_updatesAndReturns200_whenPayloadIsValid() throws Exception {
         TransactionId transactionId = new TransactionId();
-        TransactionRequestDTO payload = new TransactionRequestDTO("description", UUID.randomUUID(), UUID.randomUUID(), Set.of(UUID.randomUUID()), BigDecimal.TEN, LocalDate.now(), TransactionStatus.REGISTERED, Direction.OUT);
+        TransactionRequestDTO payload = TransactionRequestDTOFactory.create();
 
         this.mockMvc.perform(put(TransactionController.BASE_URL + "/" + transactionId.id())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -219,21 +220,16 @@ class TransactionControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("GET /transactions returns 200 OK and calls searchTransactions")
     void get_return200AndCallSearchTransaction() throws Exception {
-        AccountDTO account = new AccountDTO(UUID.randomUUID(), "account", "BRL");
-        TagDTO tag = new TagDTO(UUID.randomUUID(), "tag");
-        TagDTO tag2 = new TagDTO(UUID.randomUUID(), "tag2");
-        CategoryDTO category = new CategoryDTO(UUID.randomUUID(), "category", "type");
-
+        TransactionDTO transaction = TransactionDTOFactory.create();
         TransactionSearchCriteria criteria = TransactionSearchCriteria.builder()
                 .nonDeleted(true)
                 .searchTerm("trans")
-                .tagIds(Set.of(tag.id(), tag2.id()))
-                .accountIds(Set.of(account.id()))
-                .categoryIds(Set.of(category.id()))
+                .tagIds(transaction.tags().stream().map(TagDTO::id).collect(Collectors.toSet()))
+                .accountIds(Set.of(transaction.account().id()))
+                .categoryIds(Set.of(transaction.category().id()))
                 .sinceDate(LocalDate.now())
                 .untilDate(LocalDate.now())
                 .build();
-        TransactionDTO transaction = new TransactionDTO("description", account, category, Set.of(tag, tag2), BigDecimal.TEN, UUID.randomUUID(), LocalDate.now(), TransactionStatus.REGISTERED, false, Direction.OUT);
         Page<TransactionDTO> pageResponse = new PageImpl<>(List.of(transaction), PageRequest.of(0, 20), 1);
         when(searchTransactions.execute(eq(criteria), eq(PageRequest.of(0, 20)))).thenReturn(pageResponse);
 
@@ -252,15 +248,15 @@ class TransactionControllerTest extends AbstractControllerTest {
                 .andExpect(jsonPath("$.content", hasSize(1)))
                 .andExpect(jsonPath("$.content[0].id").value(transaction.id().toString()))
                 .andExpect(jsonPath("$.content[0].description").value(transaction.description()))
-                .andExpect(jsonPath("$.content[0].account.id").value(account.id().toString()))
-                .andExpect(jsonPath("$.content[0].account.name").value(account.name()))
-                .andExpect(jsonPath("$.content[0].account.currency").value(account.currency()))
-                .andExpect(jsonPath("$.content[0].category.id").value(category.id().toString()))
-                .andExpect(jsonPath("$.content[0].category.name").value(category.name()))
-                .andExpect(jsonPath("$.content[0].category.type").value(category.type()))
+                .andExpect(jsonPath("$.content[0].account.id").value(transaction.account().id().toString()))
+                .andExpect(jsonPath("$.content[0].account.name").value(transaction.account().name()))
+                .andExpect(jsonPath("$.content[0].account.currency").value(transaction.account().currency()))
+                .andExpect(jsonPath("$.content[0].category.id").value(transaction.category().id().toString()))
+                .andExpect(jsonPath("$.content[0].category.name").value(transaction.category().name()))
+                .andExpect(jsonPath("$.content[0].category.type").value(transaction.category().type()))
                 .andExpect(jsonPath("$.content[0].tags", hasSize(2)))
-                .andExpect(jsonPath("$.content[0].tags[*].id", containsInAnyOrder(tag.id().toString(), tag2.id().toString())))
-                .andExpect(jsonPath("$.content[0].tags[*].name", containsInAnyOrder(tag.name(), tag2.name())))
+                .andExpect(jsonPath("$.content[0].tags[*].id", containsInAnyOrder(transaction.tags().stream().map(tagDTO -> tagDTO.id().toString()).toArray(String[]::new))))
+                .andExpect(jsonPath("$.content[0].tags[*].name", containsInAnyOrder(transaction.tags().stream().map(TagDTO::name).toArray(String[]::new))))
                 .andExpect(jsonPath("$.content[0].amount").value(transaction.amount()))
                 .andExpect(jsonPath("$.content[0].date").value(transaction.date().toString()))
                 .andExpect(jsonPath("$.content[0].status").value(transaction.status().name()))
@@ -272,10 +268,8 @@ class TransactionControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("GET /transaction/{id} returns 200 OK with transaction")
     void get_return200And() throws Exception {
-        TransactionId transactionId = new TransactionId();
-        AccountDTO account = new AccountDTO(UUID.randomUUID(), "account", "BRL");
-        CategoryDTO category = new CategoryDTO(UUID.randomUUID(), "category", "type");
-        TransactionDTO transaction = new TransactionDTO("description", account, category, Set.of(), BigDecimal.TEN, transactionId.id(), LocalDate.now(), TransactionStatus.REGISTERED, false, Direction.OUT);
+        TransactionDTO transaction = TransactionDTOFactory.create();
+        TransactionId transactionId = new TransactionId(transaction.id());
 
         when(getTransaction.execute(transactionId)).thenReturn(transaction);
 
@@ -283,13 +277,14 @@ class TransactionControllerTest extends AbstractControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(transactionId.id().toString()))
                 .andExpect(jsonPath("$.description").value(transaction.description()))
-                .andExpect(jsonPath("$.account.id").value(account.id().toString()))
-                .andExpect(jsonPath("$.account.name").value(account.name()))
-                .andExpect(jsonPath("$.account.currency").value(account.currency()))
-                .andExpect(jsonPath("$.category.id").value(category.id().toString()))
-                .andExpect(jsonPath("$.category.name").value(category.name()))
-                .andExpect(jsonPath("$.category.type").value(category.type()))
-                .andExpect(jsonPath("$.tags").isEmpty())
+                .andExpect(jsonPath("$.account.id").value(transaction.account().id().toString()))
+                .andExpect(jsonPath("$.account.name").value(transaction.account().name()))
+                .andExpect(jsonPath("$.account.currency").value(transaction.account().currency()))
+                .andExpect(jsonPath("$.category.id").value(transaction.category().id().toString()))
+                .andExpect(jsonPath("$.category.name").value(transaction.category().name()))
+                .andExpect(jsonPath("$.category.type").value(transaction.category().type()))
+                .andExpect(jsonPath("$.tags[*].id", containsInAnyOrder(transaction.tags().stream().map(tagDTO -> tagDTO.id().toString()).toArray(String[]::new))))
+                .andExpect(jsonPath("$.tags[*].name", containsInAnyOrder(transaction.tags().stream().map(TagDTO::name).toArray(String[]::new))))
                 .andExpect(jsonPath("$.amount").value(transaction.amount()))
                 .andExpect(jsonPath("$.date").value(transaction.date().toString()))
                 .andExpect(jsonPath("$.status").value(transaction.status().name()))
